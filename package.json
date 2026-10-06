@@ -1,0 +1,33 @@
+{
+  "name": "njuga-casino",
+  "version": "1.0.0",
+  "private": true,
+  "description": "NJUGA/CASINO \u2014 an offline mobile card game packaged with Capacitor (Android + iOS).",
+  "scripts": {
+    "android": "npx cap open android",
+    "sync": "npx cap sync android",
+    "copy": "npx cap copy android",
+    "add:android": "npx cap add android",
+    "polish:android": "powershell -ExecutionPolicy Bypass -File ./apply-android-polish.ps1",
+    "build:android": "npm run sync && cd android && gradlew.bat bundleRelease",
+    "build:android:debug": "npm run sync && cd android && gradlew.bat assembleDebug",
+    "doctor": "npx cap doctor",
+    "add:ios": "npx cap add ios",
+    "ios": "npx cap open ios",
+    "sync:ios": "npx cap sync ios",
+    "polish:ios": "bash ./apply-ios-polish.sh",
+    "setup:ios": "bash ./setup-ios.sh"
+  },
+  "dependencies": {
+    "@capacitor/android": "^8.0.0",
+    "@capacitor/app": "^8.0.0",
+    "@capacitor/core": "^8.0.0",
+    "@capacitor/haptics": "^8.0.0",
+    "@capacitor/ios": "^8.0.0",
+    "@capacitor/status-bar": "^8.0.0"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^8.0.0",
+    "typescript": "^5.4.0"
+  }
+}
