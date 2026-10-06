@@ -1,0 +1,23 @@
+# Builds the iPhone app on a GitHub-hosted Mac (no Mac of your own needed).
+# Produces an unsigned simulator build to prove the project compiles.
+# Shipping to TestFlight/App Store still needs your Apple Developer signing
+# (see BUILD-IOS.md, "No Mac?"). NOT yet run by the author - expect to tweak the Xcode version.
+name: iOS build
+on: [workflow_dispatch]
+jobs:
+  build:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - run: npm install
+      - run: npx cap add ios
+      - run: bash ./apply-ios-polish.sh
+      - run: npx cap sync ios
+      - name: Build for iPhone simulator
+        run: |
+          cd ios/App
+          xcodebuild -project App.xcodeproj -scheme App -configuration Debug \
+            -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' \
+            CODE_SIGNING_ALLOWED=NO build
