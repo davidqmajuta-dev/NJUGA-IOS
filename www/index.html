@@ -1,0 +1,2489 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#0B3D2E">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="NJUGA/CASINO">
+<meta name="format-detection" content="telephone=no">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<title>NJUGA/CASINO</title>
+<style>
+  ::view-transition-group(*){ animation-duration: var(--vt-duration, 0.32s); animation-timing-function: cubic-bezier(0.2, 0.7, 0.3, 1); }
+  ::view-transition-old(*), ::view-transition-new(*){ animation-duration: var(--vt-duration, 0.32s); }
+  :root{
+    --felt-dark:#0B3D2E;
+    --felt:#145A43;
+    --felt-light:#1B6B50;
+    --gold:#C9A227;
+    --gold-bright:#E4C558;
+    --ivory:#FBF7EE;
+    --ink:#1B1B1B;
+    --brick:#A6332F;
+    --muted:#7FA997;
+    --shadow: 0 6px 16px rgba(0,0,0,.35);
+  }
+  body.theme-midnight{
+    --felt-dark:#0A1128; --felt:#1B2A55; --felt-light:#2C3E75;
+    --gold:#8FA6D9; --gold-bright:#C7D3F0; --ivory:#EDEFF7; --brick:#C1495A; --muted:#8B97BE;
+  }
+  body.theme-wood{
+    --felt-dark:#3B2412; --felt:#5C3A1E; --felt-light:#7A4E28;
+    --gold:#D9A24B; --gold-bright:#F0C878; --ivory:#FBF1E3; --brick:#B24A2E; --muted:#C6A57E;
+  }
+  body.anim-off *{ transition:none !important; animation:none !important; }
+  *{box-sizing:border-box; -webkit-tap-highlight-color: transparent;}
+  html,body{margin:0;padding:0;height:100%;overscroll-behavior:none;}
+
+  html{
+    -webkit-text-size-adjust:100%;
+    touch-action:manipulation;
+  }
+  button,select,input{font:inherit;}
+  button,.hand-card,.table-item,.rules-toggle,.settings-close,.seg-btn,.toggle{
+    touch-action:manipulation;
+  }
+  button:focus-visible,.hand-card:focus-visible,.table-item:focus-visible,.rules-toggle:focus-visible{
+    outline:2px solid var(--gold-bright); outline-offset:2px;
+  }
+  @media (max-width:380px){
+    #app{padding-left:7px;padding-right:7px;}
+    h1{font-size:25px;}
+  }
+  @media (min-width:700px){
+    #app{max-width:600px;}
+  }
+  /* ---- iOS / iPhone polish (iOS 17 -> iOS 27, WKWebView + Safari) ---- */
+  html{ -webkit-touch-callout:none; }
+  body{ -webkit-user-select:none; }
+  input,textarea{ -webkit-user-select:text; user-select:text; }
+  /* Safari/WKWebView auto-zooms any focused field under 16px; keep 16px so the
+     layout never jumps when the keyboard opens. */
+  @supports (-webkit-touch-callout:none){
+    input,select,textarea{ font-size:16px !important; }
+  }
+  /* Keep the page from rubber-banding under the status bar / home indicator */
+  html.ios, html.ios body{ overscroll-behavior:none; -webkit-tap-highlight-color:transparent; }
+  html.ios button, html.ios .hand-card, html.ios .table-item{ -webkit-touch-callout:none; }
+  /* Minimum 44pt touch target for the settings gear (Apple HIG) */
+  html.ios .gear-btn{ width:44px; height:44px; font-size:18px; }
+  @media (prefers-reduced-motion: reduce){
+    *{ transition-duration:.01ms !important; animation-duration:.01ms !important; }
+  }
+
+  body{
+    background: radial-gradient(ellipse at top, var(--felt-light), var(--felt-dark) 70%);
+    font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+    color:var(--ivory);
+    min-height:100vh; min-height:100dvh;
+    overflow-x:hidden;
+    user-select:none;
+  }
+  #app{
+    max-width:520px;
+    margin:0 auto;
+    min-height:100vh; min-height:100dvh;
+    display:flex;
+    flex-direction:column;
+    padding:calc(10px + env(safe-area-inset-top)) calc(10px + env(safe-area-inset-right)) calc(18px + env(safe-area-inset-bottom)) calc(10px + env(safe-area-inset-left));
+  }
+  h1{
+    font-family:Georgia,'Times New Roman',serif;
+    font-weight:700;
+    font-size:28px;
+    letter-spacing:0.5px;
+    margin:6px 0 0;
+    text-align:center;
+    color:var(--gold-bright);
+  }
+  .subtitle{
+    text-align:center;
+    font-size:12px;
+    color:var(--muted);
+    margin:2px 0 10px;
+    font-style:italic;
+    font-family:Georgia,'Times New Roman',serif;
+  }
+
+  /* ---- Scoreboard ---- */
+  .scorebar{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    background:rgba(0,0,0,0.22);
+    border:1px solid rgba(201,162,39,0.35);
+    border-radius:10px;
+    padding:8px 12px;
+    font-size:13px;
+    margin-bottom:8px;
+  }
+  .score-item{display:flex; flex-direction:column; align-items:center; min-width:64px;}
+  .score-item .label{font-size:10px; text-transform:uppercase; letter-spacing:1px; color:var(--muted);}
+  .score-item .val{font-size:18px; font-weight:700; color:var(--gold-bright); font-family:Georgia,'Times New Roman',serif;}
+  .deck-count{display:flex; flex-direction:column; align-items:center;}
+
+  /* ---- Captured piles (visible to both players) ---- */
+  .captured-section{
+    display:flex;
+    justify-content:space-between;
+    gap:8px;
+    margin-bottom:8px;
+  }
+  .captured-col{
+    flex:1;
+    background:rgba(0,0,0,0.16);
+    border:1px solid rgba(201,162,39,0.25);
+    border-radius:8px;
+    padding:5px 6px;
+    min-width:0;
+  }
+  .captured-col .cap-label{
+    font-size:9.5px;
+    text-transform:uppercase;
+    letter-spacing:0.5px;
+    color:var(--muted);
+    margin-bottom:3px;
+    text-align:center;
+  }
+  .captured-strip{
+    display:flex;
+    overflow-x:auto;
+    gap:0;
+    padding-bottom:2px;
+  }
+  .captured-strip::-webkit-scrollbar{height:3px;}
+  .captured-strip::-webkit-scrollbar-thumb{background:rgba(201,162,39,0.4); border-radius:2px;}
+  .mini-card{
+    flex:0 0 auto;
+    width:20px;height:28px;
+    background:var(--ivory);
+    border-radius:3px;
+    border:1px solid rgba(0,0,0,0.15);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:8.5px;
+    font-weight:700;
+    color:var(--ink);
+    margin-left:-9px;
+    box-shadow:0 1px 3px rgba(0,0,0,0.3);
+  }
+  .mini-card:first-child{margin-left:0;}
+  .mini-card.red{color:var(--brick);}
+  .mini-card.selectable{cursor:pointer;}
+  .mini-card.selected{
+    outline:2px solid var(--gold, #c9a227);
+    transform:translateY(-4px);
+    z-index:2;
+    box-shadow:0 3px 8px rgba(0,0,0,0.45);
+  }
+  .captured-empty-hint{
+    font-size:10px;
+    color:var(--muted);
+    font-style:italic;
+    padding:3px 0;
+  }
+
+  /* ---- Opponent row ---- */
+  .opp-row{
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    gap:4px;
+    margin:6px 0 4px;
+    min-height:56px;
+  }
+  .cardback{
+    width:34px;height:48px;
+    border-radius:5px;
+    background: repeating-linear-gradient(135deg, #7a1f1f, #7a1f1f 4px, #611818 4px, #611818 8px);
+    border:1.5px solid var(--gold);
+    box-shadow: var(--shadow);
+  }
+
+  /* ---- Log / status line ---- */
+  .status{
+    text-align:center;
+    font-size:12.5px;
+    min-height:34px;
+    color:var(--ivory);
+    background:rgba(0,0,0,0.18);
+    border-radius:8px;
+    padding:6px 10px;
+    margin:6px 0;
+    line-height:1.35;
+  }
+
+  /* ---- Table ---- */
+  .table-area{
+    background: radial-gradient(ellipse at center, var(--felt) 0%, var(--felt-dark) 100%);
+    border:2px solid rgba(201,162,39,0.4);
+    border-radius:16px;
+    min-height:150px;
+    padding:12px 8px;
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px;
+    align-items:flex-start;
+    justify-content:center;
+    box-shadow: inset 0 0 30px rgba(0,0,0,0.35);
+    margin-bottom:10px;
+    position:relative;
+  }
+  .table-empty-hint{
+    color:var(--muted);
+    font-size:12px;
+    font-style:italic;
+    align-self:center;
+    margin:auto;
+  }
+
+  .card{
+    width:46px;height:64px;
+    background:var(--ivory);
+    border-radius:6px;
+    box-shadow:var(--shadow);
+    display:flex;
+    flex-direction:column;
+    justify-content:space-between;
+    padding:3px 4px;
+    color:var(--ink);
+    font-weight:700;
+    font-size:14px;
+    line-height:1;
+    position:relative;
+    transition: transform .12s ease;
+  }
+  .card.red{color:var(--brick);}
+  .card .rank-top{align-self:flex-start;}
+  .card .suit-mid{
+    position:absolute; top:50%; left:50%;
+    transform:translate(-50%,-50%);
+    font-size:20px;
+  }
+  .card .rank-bot{align-self:flex-end; transform:rotate(180deg);}
+
+  .table-item{ position:relative; }
+  .table-item.selectable .card{ box-shadow: 0 0 0 2px var(--gold-bright), var(--shadow); cursor:pointer; }
+  .table-item.selected .card{ transform:translateY(-6px); box-shadow:0 0 0 3px #fff, var(--shadow); }
+  .table-item.at-risk .build-stack{
+    animation: pulse-risk 1.1s ease-in-out infinite;
+  }
+  @keyframes pulse-risk{
+    0%,100%{ box-shadow:0 0 0 0 rgba(178,58,58,0.55); }
+    50%{ box-shadow:0 0 0 6px rgba(178,58,58,0); }
+  }
+  .build-stack{ position:relative; width:46px; height:64px; }
+  .build-stack .card{ position:absolute; top:0; left:0; }
+  .build-stack .card:nth-child(2){ transform: translate(4px,-4px); }
+  .build-stack .card:nth-child(3){ transform: translate(8px,-8px); }
+  .build-stack .card:nth-child(n+4){ transform: translate(8px,-8px); }
+  .build-badge{
+    position:absolute; bottom:-9px; left:50%; transform:translateX(-50%);
+    background:var(--gold); color:var(--ink);
+    font-size:11px; font-weight:700;
+    border-radius:8px; padding:1px 6px;
+    box-shadow:var(--shadow);
+    white-space:nowrap;
+  }
+  .announce-btn{
+    position:absolute; top:-14px; left:50%; transform:translateX(-50%);
+    font-size:9.5px; font-weight:700;
+    padding:2px 6px; border-radius:10px;
+    background:linear-gradient(180deg, var(--gold-bright), var(--gold));
+    color:var(--ink); border:1px solid rgba(0,0,0,0.15);
+    box-shadow:var(--shadow);
+    white-space:nowrap; cursor:pointer;
+    z-index:3;
+  }
+  .announce-btn:active{ transform:translateX(-50%) scale(0.94); }
+
+  /* ---- Player hand ---- */
+  .hand-row{
+    display:flex;
+    justify-content:center;
+    gap:6px;
+    padding:8px 4px 4px;
+    flex-wrap:wrap;
+  }
+  .hand-card.selectable .card{cursor:pointer;}
+  .hand-card.selected .card{ transform:translateY(-10px); box-shadow:0 0 0 3px var(--gold-bright), var(--shadow); }
+
+  /* ---- Info / selection readout ---- */
+  .selection-info{
+    text-align:center;
+    font-size:12px;
+    color:var(--gold-bright);
+    min-height:16px;
+    margin:2px 0;
+  }
+
+  /* ---- Action buttons ---- */
+  .actions{
+    display:flex;
+    gap:8px;
+    justify-content:center;
+    margin-top:8px;
+  }
+  button{
+    font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+    font-weight:600;
+    font-size:13px;
+    padding:10px 16px;
+    border-radius:24px;
+    border:1px solid rgba(201,162,39,0.6);
+    background:linear-gradient(180deg, var(--felt-light), var(--felt));
+    color:var(--ivory);
+    cursor:pointer;
+    transition:opacity .15s ease, transform .1s ease;
+  }
+  button:active{transform:scale(0.96);}
+  button:disabled{opacity:0.35; cursor:not-allowed;}
+  button.primary{background:linear-gradient(180deg, var(--gold-bright), var(--gold)); color:var(--ink); border:none;}
+  button.ghost{background:transparent; border:1px solid rgba(255,255,255,0.25);}
+
+  /* ---- Overlay ---- */
+  .overlay{
+    position:fixed; inset:0; background:rgba(3,15,10,0.92);
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    z-index:50; padding:calc(24px + env(safe-area-inset-top)) calc(24px + env(safe-area-inset-right)) calc(24px + env(safe-area-inset-bottom)) calc(24px + env(safe-area-inset-left)); text-align:center;
+  }
+  .overlay h2{font-family:Georgia,'Times New Roman',serif; font-size:26px; color:var(--gold-bright); margin-bottom:6px;}
+  .overlay p{color:var(--muted); font-size:13px; max-width:340px; margin:4px 0 18px;}
+  .deck-tap{
+    position:relative;
+    width:70px; height:98px;
+    cursor:pointer;
+    animation: pulse 1.6s infinite ease-in-out;
+  }
+  .deck-tap.cutting{ animation:none; cursor:default; }
+  @keyframes pulse{0%,100%{transform:scale(1);}50%{transform:scale(1.05);}}
+
+  /* ---- Cut-the-cards animation: deck splits into two piles, the bottom
+     half lifts over the top half to become the new top (a single cut) ---- */
+  .cut-pile{
+    position:absolute; left:0; right:0; height:50%;
+    border-radius:8px;
+    background: repeating-linear-gradient(135deg, #7a1f1f, #7a1f1f 4px, #611818 4px, #611818 8px);
+    border:2px solid var(--gold);
+    box-shadow: 0 0 24px rgba(201,162,39,0.4), var(--shadow);
+  }
+  .cut-pile.top{ top:0; border-radius:8px 8px 3px 3px; z-index:2; }
+  .cut-pile.bottom{ bottom:0; border-radius:3px 3px 8px 8px; z-index:1; }
+  .deck-tap.cutting .cut-pile.top{ animation: cutTopHalf .7s ease forwards; }
+  .deck-tap.cutting .cut-pile.bottom{ animation: cutBottomHalf .7s ease forwards; }
+  @keyframes cutTopHalf{
+    0%{ transform:translate(0,0) rotate(0deg); }
+    45%{ transform:translate(30px,-46px) rotate(8deg); }
+    65%{ transform:translate(30px,-46px) rotate(8deg); }
+    100%{ transform:translate(0,49px) rotate(0deg); }
+  }
+  @keyframes cutBottomHalf{
+    0%{ transform:translate(0,0); z-index:1; }
+    50%{ transform:translate(0,0); z-index:1; }
+    51%{ z-index:3; }
+    100%{ transform:translate(0,-49px); z-index:3; }
+  }
+
+  /* ---- Shuffling animation: two mirrored piles riffle their cards together ---- */
+  .shuffle-stage{
+    position:relative;
+    width:170px; height:90px;
+    margin:0 auto 16px;
+  }
+  .shuffle-stage .shuffle-card{
+    position:absolute;
+    top:50%; left:50%;
+    width:40px; height:56px;
+    margin:-28px 0 0 -20px;
+    animation-duration:1.1s;
+    animation-timing-function:ease-in-out;
+    animation-iteration-count:infinite;
+  }
+  .shuffle-stage .shuffle-card:nth-child(odd){ animation-name:shuffleFromLeft; }
+  .shuffle-stage .shuffle-card:nth-child(even){ animation-name:shuffleFromRight; }
+  @keyframes shuffleFromLeft{
+    0%{ transform:translate(-60px,6px) rotate(-10deg); }
+    45%,55%{ transform:translate(4px,-4px) rotate(3deg); }
+    100%{ transform:translate(-60px,6px) rotate(-10deg); }
+  }
+  @keyframes shuffleFromRight{
+    0%{ transform:translate(60px,6px) rotate(10deg); }
+    45%,55%{ transform:translate(-4px,-4px) rotate(-3deg); }
+    100%{ transform:translate(60px,6px) rotate(10deg); }
+  }
+
+  .rules-toggle{
+    text-align:center; font-size:11px; color:var(--muted);
+    text-decoration:underline; cursor:pointer; margin-top:6px;
+  }
+  .rules-panel{
+    background:rgba(0,0,0,0.25);
+    border-radius:10px; padding:10px 12px; font-size:11.5px;
+    color:var(--muted); line-height:1.5; margin-top:6px; display:none;
+  }
+  .rules-panel.open{display:block;}
+  .rules-panel b{color:var(--ivory);}
+
+  .score-table{width:100%; border-collapse:collapse; font-size:13px; margin:12px 0;}
+  .score-table td, .score-table th{padding:5px 8px; border-bottom:1px solid rgba(255,255,255,0.15); text-align:center;}
+  .score-table th{color:var(--gold-bright); font-weight:600;}
+  .winner-line{font-family:Georgia,'Times New Roman',serif; font-size:22px; color:var(--gold-bright); margin:10px 0 4px;}
+  /* ---- settings ---- */
+  .gear-btn{
+    position:fixed; top:calc(10px + env(safe-area-inset-top)); right:calc(10px + env(safe-area-inset-right)); z-index:50;
+    width:34px; height:34px; border-radius:50%;
+    background:rgba(0,0,0,0.35); border:1px solid rgba(255,255,255,0.15);
+    color:var(--ivory); font-size:16px; display:flex; align-items:center; justify-content:center;
+    cursor:pointer;
+  }
+  .settings-overlay{
+    position:fixed; inset:0; background:rgba(0,0,0,0.55); z-index:60;
+    display:flex; align-items:flex-end; justify-content:center;
+    opacity:0; pointer-events:none; transition:opacity .2s;
+  }
+  .settings-overlay.open{ opacity:1; pointer-events:auto; }
+  .settings-panel{
+    background:var(--felt-dark); border-top:2px solid var(--gold);
+    width:100%; max-width:520px; max-height:85vh; max-height:calc(100dvh - 48px - env(safe-area-inset-top)); overflow-y:auto; overscroll-behavior:contain; -webkit-overflow-scrolling:touch;
+    border-radius:16px 16px 0 0; padding:14px 16px calc(24px + env(safe-area-inset-bottom));
+    transform:translateY(12px); transition:transform .2s;
+  }
+  .settings-overlay.open .settings-panel{ transform:translateY(0); }
+  .settings-header{
+    display:flex; justify-content:space-between; align-items:center;
+    font-family:Georgia,'Times New Roman',serif; font-size:20px; font-weight:700;
+    color:var(--gold-bright); margin-bottom:10px;
+  }
+  .settings-close{ background:none; border:none; color:var(--ivory); font-size:18px; cursor:pointer; padding:4px 8px; }
+  .settings-section{ margin-bottom:16px; }
+  .settings-section-title{
+    font-size:11px; text-transform:uppercase; letter-spacing:0.06em; color:var(--muted); margin-bottom:6px;
+  }
+  .settings-row{ display:flex; justify-content:space-between; align-items:center; gap:10px; margin-bottom:8px; font-size:13px; }
+  .seg-group{ display:flex; gap:6px; }
+  .seg-btn{
+    flex:1; padding:6px 8px; font-size:12px; border-radius:8px; border:1px solid rgba(255,255,255,0.2);
+    background:rgba(255,255,255,0.06); color:var(--ivory); cursor:pointer;
+  }
+  .seg-btn.active{ background:var(--gold); color:var(--felt-dark); border-color:var(--gold); font-weight:700; }
+  .settings-select{
+    background:rgba(255,255,255,0.08); color:var(--ivory); border:1px solid rgba(255,255,255,0.2);
+    border-radius:6px; padding:4px 6px; font-size:12px; max-width:150px;
+  }
+  .toggle-switch{
+    position:relative; width:40px; height:22px; border-radius:11px; background:rgba(255,255,255,0.2);
+    cursor:pointer; flex:0 0 auto;
+  }
+  .toggle-switch.on{ background:var(--gold); }
+  .toggle-switch .knob{
+    position:absolute; top:2px; left:2px; width:18px; height:18px; border-radius:50%;
+    background:var(--ivory); transition:left .15s;
+  }
+  .toggle-switch.on .knob{ left:20px; }
+  .settings-slider{ width:100px; }
+
+  /* ---- Loading screen ---- */
+  .loading-screen{
+    position:fixed; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center;
+    background: radial-gradient(ellipse at top, var(--felt-light), var(--felt-dark) 70%);
+    z-index:80; padding:24px; text-align:center;
+  }
+  .app-icon{
+    width:112px; height:112px; border-radius:26px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    margin-bottom:16px;
+    animation: iconPop .5s cubic-bezier(0.2,0.8,0.3,1);
+  }
+  @keyframes iconPop{0%{transform:scale(0.7); opacity:0;}100%{transform:scale(1); opacity:1;}}
+  .loading-title{
+    font-family:Georgia,'Times New Roman',serif; font-weight:700; font-size:26px;
+    color:var(--gold-bright); margin-bottom:2px;
+  }
+  .loading-tagline{ font-size:12px; color:var(--muted); font-style:italic; margin-bottom:22px; }
+  .progress-track{
+    width:200px; height:8px; border-radius:6px; background:rgba(255,255,255,0.12);
+    overflow:hidden; border:1px solid rgba(201,162,39,0.4);
+  }
+  .progress-fill{
+    height:100%; border-radius:6px;
+    background:linear-gradient(90deg, var(--gold), var(--gold-bright));
+    animation: loadFill 1.7s ease forwards;
+  }
+  @keyframes loadFill{ from{width:0%;} to{width:100%;} }
+  .loading-credits{ margin-top:26px; font-size:11px; color:var(--muted); letter-spacing:0.03em; }
+
+  /* ---- Menu / static screens ---- */
+  .menu-list{ display:flex; flex-direction:column; gap:10px; margin-top:18px; }
+  .menu-item{
+    display:flex; align-items:center; gap:12px;
+    background:rgba(0,0,0,0.22); border:1px solid rgba(201,162,39,0.35);
+    border-radius:12px; padding:14px 16px; text-align:left; cursor:pointer;
+    color:var(--ivory); font-size:15px; font-weight:600;
+  }
+  .menu-item:active{ transform:scale(0.98); }
+  .menu-item .menu-icon{ font-size:20px; width:26px; text-align:center; }
+  .menu-item .menu-sub{ display:block; font-size:11px; font-weight:400; color:var(--muted); margin-top:2px; }
+  .screen-panel{
+    background:rgba(0,0,0,0.22); border:1px solid rgba(201,162,39,0.3);
+    border-radius:12px; padding:14px 16px; font-size:13px; line-height:1.6; color:var(--ivory);
+    margin-top:12px;
+  }
+  .screen-panel h3{ color:var(--gold-bright); font-family:Georgia,'Times New Roman',serif; margin:14px 0 4px; font-size:16px; }
+  .screen-panel h3:first-child{ margin-top:0; }
+  .screen-panel p{ color:var(--ivory); margin:4px 0; }
+  .screen-panel b{ color:var(--gold-bright); }
+  .back-btn-row{ margin-top:14px; display:flex; justify-content:center; }
+  .sets-picker{ display:flex; gap:8px; justify-content:center; flex-wrap:wrap; margin:16px 0; }
+  .set-choice{
+    width:42px; height:42px; border-radius:50%; border:1px solid rgba(201,162,39,0.6);
+    background:rgba(255,255,255,0.06); color:var(--ivory); font-weight:700; cursor:pointer;
+  }
+  .set-choice.active{ background:var(--gold); color:var(--felt-dark); border-color:var(--gold); }
+  .match-badge{
+    text-align:center; font-size:11px; color:var(--muted); margin:2px 0 8px;
+    letter-spacing:0.03em;
+  }
+  .match-badge b{ color:var(--gold-bright); }
+
+  /* ---- Mini playing-card icons (menu, section headers) ---- */
+  .suit-badge{
+    display:inline-flex; align-items:center; justify-content:center; flex:0 0 auto;
+    width:36px; height:36px; border-radius:9px;
+    background:linear-gradient(160deg, var(--ivory), #E7DBBC);
+    border:1px solid rgba(0,0,0,0.2);
+    box-shadow:0 3px 8px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.7);
+    font-family:Georgia,'Times New Roman',serif; font-weight:800; font-size:14px;
+    letter-spacing:-0.5px; transform:rotate(-4deg);
+  }
+  .suit-badge.red{ color:var(--brick); }
+  .suit-badge.black{ color:#1E1E18; }
+  .suit-badge.small{ width:22px; height:22px; font-size:10px; border-radius:6px; transform:rotate(-3deg); vertical-align:-5px; margin-right:6px; }
+
+  /* ---- One deliberate background flourish: faint oversized suit marks on the felt ---- */
+  .felt-watermark{ position:fixed; inset:0; z-index:-1; overflow:hidden; pointer-events:none; }
+  .felt-watermark span{
+    position:absolute; font-family:Georgia,serif; color:rgba(255,255,255,0.035); line-height:1;
+  }
+
+  /* ---- Menu entrance: one orchestrated reveal, not per-element hover tricks ---- */
+  @keyframes riseIn{ from{opacity:0; transform:translateY(10px);} to{opacity:1; transform:translateY(0);} }
+  .menu-list .menu-item{ opacity:0; animation:riseIn .45s ease forwards; }
+  .menu-list .menu-item:nth-child(1){animation-delay:.04s;}
+  .menu-list .menu-item:nth-child(2){animation-delay:.10s;}
+  .menu-list .menu-item:nth-child(3){animation-delay:.16s;}
+  .menu-list .menu-item:nth-child(4){animation-delay:.22s;}
+  .menu-list .menu-item:nth-child(5){animation-delay:.28s;}
+  .menu-list .menu-item:nth-child(6){animation-delay:.34s;}
+  .menu-list .menu-item:nth-child(7){animation-delay:.40s;}
+  #app > h1{ animation:riseIn .5s ease; }
+  #app > .subtitle{ animation:riseIn .5s ease .05s backwards; }
+
+  .menu-item{ transition:transform .15s ease, box-shadow .15s ease, border-color .15s ease; }
+  .menu-item:active{ transform:scale(0.97); box-shadow:inset 0 2px 8px rgba(0,0,0,0.3); }
+  button.primary{ box-shadow:0 2px 8px rgba(228,197,88,0.22); }
+  @media (hover:hover){
+    .menu-item:hover{ border-color:var(--gold-bright); box-shadow:0 5px 16px rgba(0,0,0,0.32); transform:translateY(-2px); }
+    button.primary:hover{ filter:brightness(1.07); box-shadow:0 3px 11px rgba(228,197,88,0.35); }
+    button.ghost:hover{ border-color:rgba(255,255,255,0.45); }
+  }
+</style>
+</head>
+<body>
+<div class="felt-watermark" aria-hidden="true">
+  <span style="top:-40px; left:-30px; font-size:230px; transform:rotate(-12deg);">♠</span>
+  <span style="top:60%; right:-60px; font-size:260px; transform:rotate(8deg);">♥</span>
+  <span style="bottom:-70px; left:18%; font-size:200px; transform:rotate(-6deg);">♦</span>
+  <span style="top:30%; left:58%; font-size:170px; transform:rotate(14deg);">♣</span>
+</div>
+<div id="app"></div>
+<div id="settingsRoot"></div>
+
+<script src="online.js"></script>
+<script src="tournament.js"></script>
+<script>
+/* ============ CARD MODEL ============ */
+const SUITS = ['♠','♥','♦','♣'];
+const RANKS = ['A','2','3','4','5','6','7','8','9','10','J','Q','K'];
+const FACE_OR_ACE = new Set(['A','J','Q','K']);
+const FACE_ONLY = new Set(['J','Q','K']);
+
+/* ============ APP SHELL (loading / menu / static screens / match) ============ */
+// ui.screen drives which top-level screen is shown. 'game' hands off rendering
+// to the existing intro->cutting->playing->gameover state machine below.
+let ui = { screen:'loading', pendingSets:3, match:null };
+
+function startLoading(){
+  ui.screen='loading';
+  render();
+  // The splash is purely a branding beat (icon + progress bar + credits) —
+  // shuffling/cutting only ever happens once a match actually begins, inside
+  // newGame()/doCut(), never here.
+  setTimeout(()=>{ ui.screen='menu'; render(); }, 1800);
+}
+function goToMenu(){ if(net.ws||net.active){ netLeave(); return; } if(typeof tnet!=='undefined' && (tnet.ws || (state&&state.tournament))){ tLeaveTournament(); return; } ui.screen='menu'; ui.match=null; render(); }
+function openMatchSetup(){ ui.screen='matchSetup'; render(); }
+function openOnline(){ net.notice=''; ui.screen='online'; render(); }
+function openTournament(){ tnet.notice=''; ui.screen='tournament'; render(); }
+function openHowTo(){ ui.screen='howto'; render(); }
+function openRules(){ ui.screen='rules'; render(); }
+function openCredits(){ ui.screen='credits'; render(); }
+function setPendingSets(n){ ui.pendingSets=n; render(); }
+function confirmMatchSetup(){
+  const broke = walletIsBroke();
+  ui.match = {
+    totalSets: ui.pendingSets||3, wins:[0,0], setsPlayed:0,
+    wager: broke ? 0 : (ui.pendingWager||0),
+    comeback: broke,
+    comebackDifficulty: broke ? (settings.aiDifficulty==='hard' ? 'medium' : settings.aiDifficulty) : null,
+    lastWalletDelta: 0
+  };
+  ui.screen='game';
+  newGame();
+}
+function matchMajority(){ return ui.match ? Math.floor(ui.match.totalSets/2)+1 : null; }
+function matchIsDecided(){
+  if(!ui.match) return false;
+  const maj = matchMajority();
+  return ui.match.wins[0]>=maj || ui.match.wins[1]>=maj || ui.match.setsPlayed>=ui.match.totalSets;
+}
+function nextSet(){ newGame(); }
+function finishMatch(){ ui.screen='matchSummary'; render(); }
+function matchBadgeHTML(){
+  if(!ui.match) return '';
+  return `<div class="match-badge">Set <b>${ui.match.setsPlayed+1}</b> of <b>${ui.match.totalSets}</b> &nbsp;•&nbsp; Match score — You <b>${ui.match.wins[0]}</b> : <b>${ui.match.wins[1]}</b> Rival</div>`;
+}
+
+function loadingScreenHTML(){
+  return `
+    <div class="loading-screen">
+      <img class="app-icon" src="icons/icon-512.png" alt="NJUGA/CASINO">
+      <div class="loading-title">NJUGA/CASINO</div>
+      <div class="loading-tagline">a build-and-capture card game</div>
+      <div class="progress-track"><div class="progress-fill"></div></div>
+      <div class="loading-credits">Developed by David Majuta</div>
+    </div>`;
+}
+
+function menuScreenHTML(){
+  return `
+    <h1>NJUGA/CASINO</h1>
+    <div class="subtitle">a build-and-capture card game</div>
+    ${walletBadgeHTML()}
+    <div class="menu-list">
+      <div class="menu-item" onclick="openMatchSetup()"><span class="suit-badge black">A♠</span><span>Player vs AI<span class="menu-sub">Best-of-N match, choose up to 6 sets</span></span></div>
+      <div class="menu-item" onclick="openOnline()"><span class="suit-badge red">K♥</span><span>Online Rooms<span class="menu-sub">Play a friend over the network</span></span></div>
+      <div class="menu-item" onclick="openTournament()"><span class="suit-badge red">Q♦</span><span>Tournament<span class="menu-sub">4-8 players, last one standing takes the pot</span></span></div>
+      <div class="menu-item" onclick="toggleSettings()"><span class="suit-badge black">J♣</span><span>Settings<span class="menu-sub">Sound, voice, theme, AI difficulty</span></span></div>
+      <div class="menu-item" onclick="openHowTo()"><span class="suit-badge black">10♠</span><span>How To Play<span class="menu-sub">Scoring and how to win</span></span></div>
+      <div class="menu-item" onclick="openRules()"><span class="suit-badge red">9♥</span><span>Rules<span class="menu-sub">Capture, Build and Trail explained</span></span></div>
+      <div class="menu-item" onclick="openCredits()"><span class="suit-badge red">8♦</span><span>Credits</span></div>
+    </div>`;
+}
+
+function howToScreenHTML(){
+  return `
+    <h1><span class="suit-badge black" style="vertical-align:-7px;margin-right:8px;">A♠</span>How To Play</h1>
+    <div class="screen-panel">
+      <h3><span class="suit-badge small black">A♠</span>Scoring</h3>
+      <p>Points are won by capturing certain cards into your pile:</p>
+      <p>• <b>Ace</b> = 1 point each (4 aces in the deck = 4 points total)</p>
+      <p>• <b>2 of Spades</b> ("Little Casino") = 1 point</p>
+      <p>• <b>10 of Diamonds</b> ("Big Casino") = 2 points</p>
+      <p>That's <b>7 points</b> up for grabs from cards alone.</p>
+      <h3><span class="suit-badge small red">K♥</span>Bonus points</h3>
+      <p>• Whoever captures the <b>most spades</b> (out of all 13 in the deck) gets +1 bonus point.</p>
+      <p>• Whoever captures the <b>most cards</b> overall (out of all 52 in play) gets a bigger bonus.</p>
+      <h3><span class="suit-badge small red">Q♦</span>Winning</h3>
+      <p>Add up a player's card points plus their bonus points — whoever has the <b>highest total</b> wins the set. In a Player vs AI match, whoever wins the majority of sets wins the match.</p>
+    </div>
+    <div class="back-btn-row"><button class="primary" onclick="goToMenu()">Back to Menu</button></div>`;
+}
+
+function rulesScreenHTML(){
+  return `
+    <h1><span class="suit-badge red" style="vertical-align:-7px;margin-right:8px;">K♥</span>Rules</h1>
+    <div class="screen-panel">
+      <h3><span class="suit-badge small black">9♣</span>Trail</h3>
+      <p>If you can't or don't want to capture or build, play a card face-up onto the table. It just sits there loose, fair game for either player to use later.</p>
+      <h3><span class="suit-badge small red">10♦</span>Capture</h3>
+      <p>Play a card from your hand that matches loose table cards or a build on the table, either by <b>rank</b> (e.g. a King captures a King) or, for number cards, by a <b>sum</b> that equals your card's value (e.g. play a 9 to capture a loose 4 and 5). Captured cards go face-down into your pile. Table cards only — a card sitting in an opponent's captured pile can never be swept up directly; it first has to be pulled out by building with it (see "Raiding a captured pile" below).</p>
+      <h3><span class="suit-badge small black">J♠</span>Build</h3>
+      <p>Combine your played card with loose table cards (and, optionally, cards raided from the top of an opponent's captured pile) into a stack worth a specific target — either an arithmetic total (e.g. 8 + Ace = a build of 9) or a stack of matching ranks (e.g. two Kings). You must already hold another card in hand that can capture that exact build later, otherwise the build isn't allowed. An existing build can be extended further — adding more cards that still sum to the same target, or another same-rank card to a rank-stack — but it can only ever be captured as one whole unit, never split apart.</p>
+      <p>If it becomes your turn and you can neither extend nor capture your own build, it breaks apart back into loose cards on the table for anyone to use.</p>
+      <h3><span class="suit-badge small red">Q♥</span>Raiding a captured pile</h3>
+      <p>Cards from the top of your <b>opponent's</b> captured pile can be pulled back into play — but only as part of a <b>build</b>, never as a direct capture. Play a card from your hand to start (or extend) a build, tap the top of the opponent's pile to fold it in, and hold onto another card of that value to capture the build later. You can keep raiding in the same move: each card you lift reveals the next one, which you may raid too if it fits the build (same rank, or it adds up with the other cards). Never your own pile, and never a card buried under one you're not taking.</p>
+    </div>
+    <div class="back-btn-row"><button class="primary" onclick="goToMenu()">Back to Menu</button></div>`;
+}
+
+function creditsScreenHTML(){
+  return `
+    <h1><span class="suit-badge red" style="vertical-align:-7px;margin-right:8px;">8♦</span>Credits</h1>
+    <div class="screen-panel" style="text-align:center;">
+      <h3>NJUGA/CASINO</h3>
+      <p>Developed by <b>David Majuta</b></p>
+    </div>
+    <div class="back-btn-row"><button class="primary" onclick="goToMenu()">Back to Menu</button></div>`;
+}
+
+function onlineScreenHTML(){ return netScreenHTML(); }
+
+function setPendingWager(n){ ui.pendingWager=n; render(); }
+function matchSetupHTML(){
+  const choices = [1,2,3,4,5,6].map(n=>`<button class="set-choice ${ui.pendingSets===n?'active':''}" onclick="setPendingSets(${n})">${n}</button>`).join('');
+  const broke = walletIsBroke();
+  if(ui.pendingWager===undefined || ui.pendingWager===null) ui.pendingWager = 50; // default wager
+  let wagerBlock;
+  if(broke){
+    wagerBlock = `
+      <p style="color:var(--gold-bright);">Your wallet is empty. This will be a free <b>Comeback</b> match on Easy or Medium — win a set to earn <b>+$100.00</b>.</p>
+      ${settings.aiDifficulty==='hard' ? '<p style="font-size:12px;color:var(--muted);">Hard is disabled for Comeback matches — this match will use Medium instead.</p>' : ''}`;
+  } else {
+    const opt = (val,label)=>`<button class="set-choice ${ui.pendingWager===val?'active':''}" ${val>wallet?'disabled':''} onclick="setPendingWager(${val})">${label}</button>`;
+    wagerBlock = `
+      <p>Wager per set (win a set to earn it, lose a set to pay it — optional):</p>
+      <div class="sets-picker">${opt(0,'Free Play')}${opt(50,'$50')}${opt(100,'$100')}</div>`;
+  }
+  return `
+    <h1>Player vs AI</h1>
+    <div class="subtitle">a build-and-capture card game</div>
+    ${walletBadgeHTML()}
+    <div class="screen-panel">
+      <p>Choose how many sets make up the match (best of the majority wins):</p>
+      <div class="sets-picker">${choices}</div>
+      ${wagerBlock}
+    </div>
+    <div class="back-btn-row" style="gap:8px;">
+      <button class="ghost" onclick="goToMenu()">Cancel</button>
+      <button class="primary" onclick="confirmMatchSetup()">Start Match</button>
+    </div>`;
+}
+
+function matchSummaryHTML(){
+  const m = ui.match;
+  const winner = m.wins[0]===m.wins[1] ? "It's a tie match!" : (m.wins[0]>m.wins[1] ? 'You win the match! 🏆' : 'Rival wins the match.');
+  return `
+    <h1>Match Result</h1>
+    <div class="overlay" style="position:static; background:transparent; padding-top:10px;">
+      <div class="winner-line">${winner}</div>
+      <table class="score-table">
+        <tr><th></th><th>You</th><th>Rival</th></tr>
+        <tr><td>Sets won</td><td>${m.wins[0]}</td><td>${m.wins[1]}</td></tr>
+        <tr><td>Sets played</td><td colspan="2" style="text-align:center;">${m.setsPlayed} of ${m.totalSets}</td></tr>
+      </table>
+      ${!net.active && (m.wager>0 || m.comeback) ? walletBadgeHTML() : ''}
+      <button class="primary" onclick="goToMenu()">Back to Menu</button>
+    </div>`;
+}
+
+function buildValue(card){
+  // The value of a card AS THE ACTIVE PLAYED CARD (declaring a build, or the
+  // card used to capture). Only numeric 2-10 cards can do this.
+  return FACE_OR_ACE.has(card.rank) ? null : parseInt(card.rank,10);
+}
+function sumValue(card){
+  // The value of a card AS AN INGREDIENT inside a sum (loose table card,
+  // captured-pile card being raided, etc). Aces count as 1 here; J/Q/K never
+  // contribute to a sum.
+  if(card.rank==='A') return 1;
+  if(FACE_ONLY.has(card.rank)) return null;
+  return parseInt(card.rank,10);
+}
+function isRed(card){ return card.suit==='♥' || card.suit==='♦'; }
+function cardKey(card){ return card.rank+card.suit; }
+
+function createDeck(){
+  const d=[];
+  for(const s of SUITS) for(const r of RANKS) d.push({rank:r, suit:s});
+  return d;
+}
+function shuffle(arr){
+  for(let i=arr.length-1;i>0;i--){
+    const j=Math.floor(Math.random()*(i+1));
+    [arr[i],arr[j]]=[arr[j],arr[i]];
+  }
+  return arr;
+}
+function cutDeck(arr){
+  const cut = Math.floor(arr.length*0.35) + Math.floor(Math.random()*Math.floor(arr.length*0.3));
+  return arr.slice(cut).concat(arr.slice(0,cut));
+}
+
+/* ============ GAME STATE ============ */
+/* ============ SETTINGS ============ */
+const SETTINGS_KEY = 'spadesAndTensSettings_v1';
+function defaultSettings(){
+  return {
+    aiDifficulty:'medium', // easy | medium | hard
+    theme:'classic',       // classic | midnight | wood
+    animations:'on',       // on | off
+    aiThinkMs:700,         // fast=300, normal=700, slow=1200
+    confirmTrail:false,
+    musicOn:false,
+    musicVolume:0.3,
+    voiceOn:false,
+    voiceVolume:1,
+    voiceName:null
+  };
+}
+function loadSettings(){
+  const d = defaultSettings();
+  try{
+    if(typeof localStorage!=='undefined'){
+      const raw = localStorage.getItem(SETTINGS_KEY);
+      if(raw) return Object.assign(d, JSON.parse(raw));
+    }
+  }catch(e){}
+  return d;
+}
+function saveSettings(){
+  try{
+    if(typeof localStorage!=='undefined') localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+  }catch(e){}
+}
+let settings = loadSettings();
+
+/* ============ WALLET ============ */
+// A simple virtual-currency wallet, local to this device/install. Used for
+// AI wager matches and, later, agreed real-money online wagers.
+const WALLET_KEY = 'njugaWallet_v1';
+function loadWallet(){
+  try{
+    const raw = localStorage.getItem(WALLET_KEY);
+    const v = raw==null ? NaN : parseFloat(raw);
+    if(!isNaN(v)) return Math.max(0, v);
+  }catch(e){}
+  return 1000;
+}
+function saveWallet(){ try{ localStorage.setItem(WALLET_KEY, String(wallet)); }catch(e){} }
+let wallet = loadWallet();
+function walletAdd(delta){ wallet = Math.max(0, Math.round((wallet+delta)*100)/100); saveWallet(); }
+function walletFmt(v){ return '$'+(v===undefined?wallet:v).toFixed(2); }
+function moneyFmt(v){ return (v<0?'-$':'+$')+Math.abs(v).toFixed(2); }
+function walletIsBroke(){ return wallet<=0; }
+function walletResetTo1000(){
+  let ok = true;
+  try{ ok = confirm('Reset your wallet to $1000.00? This cannot be undone.'); }catch(e){}
+  if(!ok) return;
+  wallet = 1000; saveWallet(); render();
+}
+function walletBadgeHTML(note){
+  return `<div style="text-align:center;font-size:13px;color:var(--gold-bright);margin:2px 0 10px;">💰 Wallet: <b>${walletFmt()}</b>${note?` <span style="color:var(--muted);font-size:11px;">${note}</span>`:''}</div>`;
+}
+let settingsOpen = false;
+
+function applyGraphicsSettings(){
+  if(typeof document==='undefined' || !document.body) return;
+  document.body.classList.remove('theme-classic','theme-midnight','theme-wood');
+  document.body.classList.add('theme-'+settings.theme);
+  document.body.classList.toggle('anim-off', settings.animations==='off');
+  document.documentElement.style.setProperty('--vt-duration', settings.animations==='off' ? '0.001s' : '0.32s');
+}
+
+/* ---- background music: a simple ambient triad pad via Web Audio, no external files ---- */
+let audioCtx = null, musicNodes = null;
+function ensureAudioCtx(){
+  if(typeof window==='undefined') return null;
+  if(!audioCtx && (window.AudioContext || window.webkitAudioContext)){
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  }
+  // Some Android WebViews create a context that stays 'suspended' even after
+  // a real tap, silently producing no sound until resume() is called.
+  if(audioCtx && (audioCtx.state==='suspended' || audioCtx.state==='interrupted')){
+    audioCtx.resume().catch(()=>{});
+  }
+  return audioCtx;
+}
+function startMusic(){
+  const ctx = ensureAudioCtx();
+  if(!ctx || musicNodes) return;
+  if(ctx.state==='suspended') ctx.resume().catch(()=>{});
+  const masterGain = ctx.createGain();
+  masterGain.gain.value = settings.musicVolume;
+  masterGain.connect(ctx.destination);
+  // Calm C major triad, low register, plus a soft octave-up doubling of the
+  // root and fifth so the loop still reads clearly on small phone speakers
+  // (which reproduce sub-200Hz tones very weakly).
+  const freqs = [130.81, 164.81, 196.00, 261.63, 392.00];
+  const gains = [0.22, 0.22, 0.22, 0.12, 0.10];
+  const oscs = freqs.map((f,i)=>{
+    const o = ctx.createOscillator();
+    o.type = 'sine';
+    o.frequency.value = f;
+    const g = ctx.createGain();
+    g.gain.value = 0;
+    o.connect(g); g.connect(masterGain);
+    o.start();
+    g.gain.linearRampToValueAtTime(gains[i], ctx.currentTime + 2);
+    return {o, g};
+  });
+  musicNodes = {ctx, masterGain, oscs};
+}
+function stopMusic(){
+  if(!musicNodes) return;
+  const {ctx, masterGain, oscs} = musicNodes;
+  const now = ctx.currentTime;
+  oscs.forEach(({o,g})=>{
+    g.gain.cancelScheduledValues(now);
+    g.gain.setValueAtTime(g.gain.value, now);
+    g.gain.linearRampToValueAtTime(0, now+1);
+    o.stop(now+1.2);
+  });
+  musicNodes = null;
+}
+function updateMusicVolume(){
+  if(musicNodes) musicNodes.masterGain.gain.value = settings.musicVolume;
+}
+
+/* ---- voice announcements via the browser's built-in speech synthesis ---- */
+function speak(text){
+  if(!settings.voiceOn) return;
+  if(typeof window==='undefined' || !('speechSynthesis' in window)) return;
+  try{
+    window.speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    u.volume = settings.voiceVolume;
+    u.rate = 1.05;
+    if(settings.voiceName){
+      const v = window.speechSynthesis.getVoices().find(v=>v.name===settings.voiceName);
+      if(v) u.voice = v;
+    }
+    window.speechSynthesis.speak(u);
+  }catch(e){}
+}
+
+/* ---- settings panel UI (lives outside #app so it survives every game render) ---- */
+function toggleSettings(){ settingsOpen = !settingsOpen; renderSettingsUI(); }
+function setSetting(key, value){
+  settings[key] = value;
+  saveSettings();
+  if(key==='theme' || key==='animations') applyGraphicsSettings();
+  renderSettingsUI();
+}
+function onMusicToggle(){
+  settings.musicOn = !settings.musicOn;
+  saveSettings();
+  if(settings.musicOn) startMusic(); else stopMusic();
+  renderSettingsUI();
+}
+function onVoiceToggle(){
+  settings.voiceOn = !settings.voiceOn;
+  saveSettings();
+  if(settings.voiceOn) speak('Voice announcements on');
+  renderSettingsUI();
+}
+function onConfirmTrailToggle(){
+  settings.confirmTrail = !settings.confirmTrail;
+  saveSettings();
+  renderSettingsUI();
+}
+function onMusicVolume(v){ settings.musicVolume = parseFloat(v); saveSettings(); updateMusicVolume(); }
+function onVoiceVolume(v){ settings.voiceVolume = parseFloat(v); saveSettings(); }
+function onVoiceSelect(v){ settings.voiceName = v || null; saveSettings(); }
+
+function renderSettingsUI(){
+  if(typeof document==='undefined') return;
+  const root = document.getElementById('settingsRoot');
+  if(!root) return;
+
+  function seg(groupKey, options){
+    return `<div class="seg-group">${options.map(([val,label])=>
+      `<button class="seg-btn ${settings[groupKey]===val?'active':''}" onclick="setSetting('${groupKey}','${val}')">${label}</button>`
+    ).join('')}</div>`;
+  }
+  function toggle(onFn, isOn){
+    return `<div class="toggle-switch ${isOn?'on':''}" onclick="${onFn}()"><div class="knob"></div></div>`;
+  }
+  let voices = [];
+  try{ if(typeof window!=='undefined' && window.speechSynthesis) voices = window.speechSynthesis.getVoices(); }catch(e){}
+
+  root.innerHTML = `
+    <button class="gear-btn" onclick="toggleSettings()" aria-label="Settings">⚙️</button>
+    <div class="settings-overlay ${settingsOpen?'open':''}" onclick="if(event.target===this) toggleSettings()">
+      <div class="settings-panel">
+        <div class="settings-header"><span>Settings</span><button class="settings-close" onclick="toggleSettings()">✕</button></div>
+
+        <div class="settings-section">
+          <div class="settings-section-title">Wallet</div>
+          <div class="settings-row"><span>Balance</span><b style="color:var(--gold-bright);">${walletFmt()}</b></div>
+          <div class="settings-row"><span>Start over</span><button class="ghost" style="padding:4px 12px;font-size:12px;" onclick="walletResetTo1000()">Reset to $1000</button></div>
+        </div>
+
+        <div class="settings-section">
+          <div class="settings-section-title">Rival AI difficulty</div>
+          ${seg('aiDifficulty', [['easy','Easy'],['medium','Medium'],['hard','Hard']])}
+        </div>
+
+        <div class="settings-section">
+          <div class="settings-section-title">Graphics</div>
+          <div class="settings-row"><span>Table theme</span>
+            <select class="settings-select" onchange="setSetting('theme', this.value)">
+              <option value="classic" ${settings.theme==='classic'?'selected':''}>Classic Felt</option>
+              <option value="midnight" ${settings.theme==='midnight'?'selected':''}>Midnight Blue</option>
+              <option value="wood" ${settings.theme==='wood'?'selected':''}>Warm Wood</option>
+            </select>
+          </div>
+          <div class="settings-row"><span>Animations</span>${seg('animations',[['on','On'],['off','Off']])}</div>
+        </div>
+
+        <div class="settings-section">
+          <div class="settings-section-title">Controls</div>
+          <div class="settings-row"><span>Rival move speed</span>
+            <select class="settings-select" onchange="setSetting('aiThinkMs', parseInt(this.value,10))">
+              <option value="300" ${settings.aiThinkMs===300?'selected':''}>Fast</option>
+              <option value="700" ${settings.aiThinkMs===700?'selected':''}>Normal</option>
+              <option value="1200" ${settings.aiThinkMs===1200?'selected':''}>Slow</option>
+            </select>
+          </div>
+          <div class="settings-row"><span>Confirm before trailing</span>${toggle('onConfirmTrailToggle', settings.confirmTrail)}</div>
+        </div>
+
+        <div class="settings-section">
+          <div class="settings-section-title">Sound</div>
+          <div class="settings-row"><span>Background music</span>${toggle('onMusicToggle', settings.musicOn)}</div>
+          <div class="settings-row"><span>Music volume</span>
+            <input class="settings-slider" type="range" min="0" max="1" step="0.05" value="${settings.musicVolume}" oninput="onMusicVolume(this.value)">
+          </div>
+          <div class="settings-row"><span>Voice announcements</span>${toggle('onVoiceToggle', settings.voiceOn)}</div>
+          <div class="settings-row"><span>Voice volume</span>
+            <input class="settings-slider" type="range" min="0" max="1" step="0.05" value="${settings.voiceVolume}" oninput="onVoiceVolume(this.value)">
+          </div>
+          ${voices.length>0 ? `<div class="settings-row"><span>Voice</span>
+            <select class="settings-select" onchange="onVoiceSelect(this.value)">
+              <option value="">Default</option>
+              ${voices.map(v=>`<option value="${v.name}" ${settings.voiceName===v.name?'selected':''}>${v.name}</option>`).join('')}
+            </select>
+          </div>` : ''}
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+let state = null;
+
+function newGame(){
+  state = {
+    phase:'intro', // intro -> cutting -> playing -> gameover
+    deck: createDeck(),
+    table: [], // items: {type:'card', card} or {type:'build', targetValue, cards:[], owner}
+    players: [
+      {id:0, name:'You', hand:[], captured:[]},
+      {id:1, name:'Rival', hand:[], captured:[]}
+    ],
+    active: [0,1], // seats still in play — always both, outside Tournament mode
+    turn:0,
+    lastCapturer:null,
+    log:'Shuffling Cards...',
+    selHand:null, // index into current player's hand
+    selTable:new Set(), // indices into table array
+    selCaptured:new Set(), // keys "ownerIdx_cardIdx" into players[owner].captured — cards raided from a captured pile
+    forcedCapture:null, // {owner, buildRef} — a build its owner must capture this turn or lose
+    rulesOpen:false,
+    cuttingAnim:false // true while the cut animation is playing, before the deck actually splits
+  };
+  shuffle(state.deck);
+  render();
+}
+
+function doCut(){
+  if(state.cuttingAnim) return; // already animating — ignore extra taps
+  state.cuttingAnim = true;
+  render(); // shows the split-pile animation and disables further taps
+  setTimeout(()=>{
+    state.deck = cutDeck(state.deck);
+    state.phase='playing';
+    state.cuttingAnim = false;
+    dealInitial();
+    state.log = net.active ? 'Cards dealt. The player who created the room goes first.' : 'Cards dealt. You go first — select a card from your hand.';
+    render();
+  }, 700); // matches the .deck-tap.cutting animation duration below
+}
+
+function dealInitial(){
+  const seats = state.active || [0,1];
+  for(let i=0;i<4;i++) state.table.push({type:'card', card:state.deck.pop()});
+  for(let i=0;i<4;i++){
+    seats.forEach(seat=>{ if(state.deck.length>0) state.players[seat].hand.push(state.deck.pop()); });
+  }
+}
+function dealMoreIfNeeded(){
+  // A round ends only once EVERY seat still in play has emptied its hand.
+  // At that point, if cards remain undrawn, deal a fresh 4 to each seat
+  // for the next round. This repeats until the deck is exhausted.
+  const seats = state.active || [0,1];
+  if(seats.every(seat=>state.players[seat].hand.length===0)){
+    if(state.deck.length>0){
+      for(let i=0;i<4;i++){
+        seats.forEach(seat=>{ if(state.deck.length>0) state.players[seat].hand.push(state.deck.pop()); });
+      }
+      state.log = `New round — 4 cards dealt to each player. ${state.log}`;
+      speak('New round dealt');
+    } else {
+      if(state.tournament) tEndRound(); else endGame();
+    }
+  }
+}
+
+/* ============ VALIDATION ============ */
+function getAllSubsets(items){
+  const res=[];
+  const n=items.length;
+  for(let mask=1; mask<(1<<n); mask++){
+    const subset=[];
+    for(let i=0;i<n;i++) if(mask & (1<<i)) subset.push(items[i]);
+    res.push(subset);
+  }
+  return res;
+}
+
+// Resolves a human/UI selection (table indices + "ownerIdx_cardIdx" captured-pile
+// keys) into a flat list of generic pool items, each carrying its own sum value.
+function resolveSelection(selTableIdxArr, selCapturedKeysArr){
+  const items = [];
+  let hasBuild = false;
+  selTableIdxArr.forEach(idx=>{
+    const it = state.table[idx];
+    if(it.type==='card'){
+      items.push({kind:'tableCard', idx, value: sumValue(it.card), rank: it.card.rank, card: it.card});
+    } else {
+      hasBuild = true;
+      items.push({kind:'tableBuild', idx, value: it.targetValue, rank: it.targetRank||null, cards: it.cards});
+    }
+  });
+  (selCapturedKeysArr||[]).forEach(key=>{
+    const [owner, idx] = key.split('_').map(Number);
+    const card = state.players[owner].captured[idx];
+    items.push({kind:'captured', owner, idx, value: sumValue(card), rank: card.rank, card});
+  });
+  return {items, hasBuild};
+}
+
+// True if `values` (positive numbers) can be split into one or more disjoint
+// groups that EACH sum exactly to `target` — e.g. [5,2,4,3] with target 7 splits
+// into [5,2] and [4,3]. Cards that don't fit any group simply aren't selected.
+function canPartitionExact(values, target){
+  const items = values.filter(v=>v!==null && v!==undefined);
+  if(items.length===0 || items.length!==values.length) return false;
+  if(items.some(v=>v>target || v<=0)) return false;
+  const sorted = [...items].sort((a,b)=>b-a);
+  const n = sorted.length;
+  const used = new Array(n).fill(false);
+
+  function extend(afterIdx, remainingSum, remainingCount){
+    if(remainingSum===0) return solve(remainingCount);
+    for(let i=afterIdx+1;i<n;i++){
+      if(!used[i] && sorted[i]<=remainingSum){
+        used[i]=true;
+        if(extend(i, remainingSum-sorted[i], remainingCount-1)) return true;
+        used[i]=false;
+      }
+    }
+    return false;
+  }
+  function solve(remainingCount){
+    if(remainingCount===0) return true;
+    let first=-1;
+    for(let i=0;i<n;i++) if(!used[i]){ first=i; break; }
+    if(first===-1) return true;
+    used[first]=true;
+    const ok = extend(first, target-sorted[first], remainingCount-1);
+    used[first]=false;
+    return ok;
+  }
+  return solve(n);
+}
+
+// Finds a build target T (2-10) such that [handCard's value, ...item values] can
+// be partitioned into groups that EACH sum to T, and the player still holds
+// another card of value T after playing handCard. This is what lets two loose 7s
+// (each already a size-1 group at T=7) get merged into a single build of 7,
+// alongside the classic arithmetic case (e.g. hand 3 + table 4 = build of 7).
+//
+// IMPORTANT — a build's number can never be changed by anyone once it exists.
+// If the selection includes an existing build, T is locked to that build's own
+// value; the hand card and any loose cards just need to form their own group(s)
+// that also sum to exactly that same value alongside it. The build is only ever
+// grown (more cards) or fully captured — never re-targeted to a different number.
+function determineBuildTarget(handCard, items, hand){
+  // Uses sumValue (not buildValue) for the hand card's own contribution — this is
+  // what lets an Ace played from hand act as a 1 inside a build's arithmetic
+  // (e.g. 8 + Ace = 9), while J/Q/K still can't (sumValue is null for them).
+  const handValue = sumValue(handCard);
+  if(handValue===null) return null;
+  if(items.some(i=>i.value===null || i.value===undefined)) return null;
+  const remaining = hand.filter(c=>c!==handCard);
+
+  const buildItems = items.filter(i=>i.kind==='tableBuild');
+  if(buildItems.length>0){
+    // Every existing build in the selection must already share one value —
+    // builds with different numbers can never be merged — and that shared
+    // value is the ONLY target this move is allowed to lock onto.
+    const T = buildItems[0].value;
+    if(buildItems.some(b=>b.value!==T)) return null;
+    const looseValues = [handValue, ...items.filter(i=>i.kind!=='tableBuild').map(i=>i.value)];
+    if(canPartitionExact(looseValues, T) && remaining.some(c=>buildValue(c)===T)) return T;
+    return null;
+  }
+
+  const values = [handValue, ...items.map(i=>i.value)];
+  for(let T=2; T<=10; T++){
+    if(canPartitionExact(values, T) && remaining.some(c=>buildValue(c)===T)) return T;
+  }
+  return null;
+}
+// Rank-based build: for a face card or Ace, any number of same-rank items (loose
+// cards, raided cards, or an existing same-rank build) can be stacked together —
+// no arithmetic involved, just matching rank — as long as another card of that
+// rank is left in hand to capture the stack later. A rank-build's rank can't
+// change either, since every included item is already required to share it.
+function determineRankBuild(handCard, items, hand){
+  if(!FACE_OR_ACE.has(handCard.rank)) return null;
+  if(items.length===0) return null;
+  if(!items.every(it=>it.rank===handCard.rank)) return null;
+  const remaining = hand.filter(c=>c!==handCard);
+  return remaining.some(c=>c.rank===handCard.rank) ? handCard.rank : null;
+}
+
+// Only the TOP card of a captured pile (the most recently captured one) can ever
+// be raided — anything buried underneath it is off-limits.
+function isTopOfCapturedPile(owner, idx){
+  const pile = state.players[owner] && state.players[owner].captured;
+  return !!pile && idx === pile.length - 1;
+}
+// Raiding can chain: after the top card is lifted, the NEXT card down becomes the
+// new top and may be raided too. So a valid raid selection, per pile, is an
+// unbroken run of cards starting at the very top (top, top-1, top-2 ...).
+function selCapturedKeysAllTop(selCapturedKeysArr){
+  const byOwner = {};
+  for(const key of (selCapturedKeysArr||[])){
+    const [owner, idx] = key.split('_').map(Number);
+    (byOwner[owner] = byOwner[owner]||[]).push(idx);
+  }
+  return Object.keys(byOwner).every(owner=>{
+    const pile = state.players[owner] && state.players[owner].captured;
+    if(!pile) return false;
+    const idxs = byOwner[owner];
+    if(new Set(idxs).size!==idxs.length) return false;
+    const lowest = Math.min(...idxs);
+    return lowest>=0 && idxs.length===pile.length-lowest; // exactly lowest..top
+  });
+}
+// The one card in a pile that may be tapped next to grow (or, if already the
+// deepest selected, shrink) the raid run.
+function nextRaidIdx(owner){
+  const pile = state.players[owner].captured;
+  const chosen = [...state.selCaptured].map(k=>k.split('_').map(Number)).filter(([o])=>o===owner).map(([,i])=>i);
+  return chosen.length ? Math.min(...chosen)-1 : pile.length-1;
+}
+function deepestRaidIdx(owner){
+  const chosen = [...state.selCaptured].map(k=>k.split('_').map(Number)).filter(([o])=>o===owner).map(([,i])=>i);
+  return chosen.length ? Math.min(...chosen) : -1;
+}
+
+function selectionIsValidCapture(handCard, selTableIdxArr, selCapturedKeysArr){
+  selCapturedKeysArr = selCapturedKeysArr||[];
+  // A captured pile can NEVER be raided straight into a capture. A card must
+  // first be pulled off the top of an opponent's pile by BUILDING with it —
+  // only once it's part of a build on the table can it later be captured
+  // (as part of that build, with no raiding involved at that point).
+  if(selCapturedKeysArr.length>0) return false;
+  if(selTableIdxArr.length===0 && selCapturedKeysArr.length===0) return false;
+  const {items} = resolveSelection(selTableIdxArr, selCapturedKeysArr);
+
+  if(FACE_OR_ACE.has(handCard.rank)){
+    // Face cards and Aces capture exactly ONE loose card of matching rank at a
+    // time — sweeping several scattered loose Kings with a single King isn't
+    // allowed; multiple same-rank cards can only be captured together once
+    // they've actually been built into a single pile first. Any number of
+    // already-assembled same-rank builds can still be swept together, though,
+    // since each is already one complete unit.
+    if(items.length===0) return false;
+    if(!items.every(it=>it.rank===handCard.rank)) return false;
+    const looseCount = items.filter(it=>it.kind!=='tableBuild').length;
+    return looseCount<=1;
+  }
+
+  const value = buildValue(handCard);
+  // Any existing build(s) included must match the played value exactly — a build
+  // is already a completed, fixed-value pile, so it can never be merged
+  // arithmetically into a different sum, only swept up whole. Loose cards
+  // (table or raided) can still combine into one or more groups alongside it,
+  // e.g. an existing build of 7 plus a separate loose 7 both get captured together.
+  const buildItems = items.filter(i=>i.kind==='tableBuild');
+  const looseItems = items.filter(i=>i.kind!=='tableBuild');
+  if(buildItems.some(b=>b.value!==value)) return false;
+  const looseValues = looseItems.map(i=>i.value);
+  if(looseValues.some(v=>v===null || v===undefined)) return false;
+  if(looseValues.length===0) return buildItems.length>0;
+  return canPartitionExact(looseValues, value);
+}
+
+function selectionIsValidBuild(handCard, selTableIdxArr, selCapturedKeysArr, hand){
+  selCapturedKeysArr = selCapturedKeysArr||[];
+  if(!selCapturedKeysAllTop(selCapturedKeysArr)) return false; // raided cards must be an unbroken run from the top of a pile
+  if(selTableIdxArr.length===0 && selCapturedKeysArr.length===0) return false;
+  const {items} = resolveSelection(selTableIdxArr, selCapturedKeysArr);
+  // Try the numeric path first (covers 2-10 cards, and an Ace contributing as a 1),
+  // then fall back to rank-stacking for any face card or Ace.
+  if(determineBuildTarget(handCard, items, hand) !== null) return true;
+  if(FACE_OR_ACE.has(handCard.rank)) return determineRankBuild(handCard, items, hand) !== null;
+  return false;
+}
+
+/* ============ ACTIONS ============ */
+function removeCapturedRefs(selCapturedKeysArr){
+  const byOwner = {};
+  (selCapturedKeysArr||[]).forEach(key=>{
+    const [owner, idx] = key.split('_').map(Number);
+    (byOwner[owner] = byOwner[owner]||[]).push(idx);
+  });
+  Object.keys(byOwner).forEach(owner=>{
+    const idxs = byOwner[owner].sort((a,b)=>b-a);
+    idxs.forEach(i=> state.players[owner].captured.splice(i,1));
+  });
+}
+
+function performCapture(playerIdx, handCard, selTableIdxArr, selCapturedKeysArr){
+  selCapturedKeysArr = selCapturedKeysArr||[];
+  const player = state.players[playerIdx];
+  const {items} = resolveSelection(selTableIdxArr, selCapturedKeysArr);
+  // The captured table/raided cards go to the bottom of the pile; the card used
+  // to make the capture goes on top, since it was the last one played.
+  let capturedCards=[];
+  items.forEach(it=>{
+    if(it.kind==='tableBuild') capturedCards = capturedCards.concat(it.cards);
+    else capturedCards.push(it.card);
+  });
+  capturedCards.push(handCard);
+
+  const tableDesc = [...selTableIdxArr].sort((a,b)=>b-a);
+  tableDesc.forEach(i=>state.table.splice(i,1));
+  removeCapturedRefs(selCapturedKeysArr);
+
+  player.hand = player.hand.filter(c=>c!==handCard);
+  player.captured = player.captured.concat(capturedCards);
+  state.lastCapturer = playerIdx;
+
+  const raided = selCapturedKeysArr.length>0;
+  state.log = `${player.name} captures ${capturedCards.length} card${capturedCards.length>1?'s':''} with ${handCard.rank}${handCard.suit}${raided?', raiding a captured pile':''}.`;
+  const announceLabel = FACE_OR_ACE.has(handCard.rank) ? `${handCard.rank}s` : `${buildValue(handCard)}`;
+  speak(`${announceLabel} captured`);
+}
+function performBuild(playerIdx, handCard, selTableIdxArr, selCapturedKeysArr){
+  selCapturedKeysArr = selCapturedKeysArr||[];
+  const player = state.players[playerIdx];
+  const {items} = resolveSelection(selTableIdxArr, selCapturedKeysArr);
+  const numericTarget = determineBuildTarget(handCard, items, player.hand);
+  const isRankBuild = numericTarget===null && FACE_OR_ACE.has(handCard.rank);
+  const value = numericTarget;
+  const rank = isRankBuild ? determineRankBuild(handCard, items, player.hand) : null;
+  let cards = [handCard];
+  let extended = false;
+  items.forEach(it=>{
+    if(it.kind==='tableBuild'){ cards = cards.concat(it.cards); extended = true; }
+    else cards.push(it.card);
+  });
+
+  const tableDesc = [...selTableIdxArr].sort((a,b)=>b-a);
+  tableDesc.forEach(i=>state.table.splice(i,1));
+  removeCapturedRefs(selCapturedKeysArr);
+
+  player.hand = player.hand.filter(c=>c!==handCard);
+  state.table.push({type:'build', targetValue:value, targetRank:rank, cards, owner:playerIdx});
+
+  const raided = selCapturedKeysArr.length>0;
+  const label = isRankBuild ? `a stack of ${rank}s` : `${value}`;
+  let msg = `${player.name} builds ${label} using ${cards.map(c=>c.rank+c.suit).join('+')}`;
+  if(extended) msg += ' (merging an existing build)';
+  if(raided) msg += ', pulling cards from a captured pile';
+  state.log = msg + '.';
+  speak(`${isRankBuild ? rank+'s' : value} built`);
+}
+function performTrail(playerIdx, handCard){
+  const player = state.players[playerIdx];
+  player.hand = player.hand.filter(c=>c!==handCard);
+  state.table.push({type:'card', card:handCard});
+  state.log = `${player.name} trails ${handCard.rank}${handCard.suit}.`;
+}
+
+// A build's owner must be able to either extend it further or capture it on
+// their turn. If they can do neither, it collapses immediately. If they CAN
+// capture it but choose not to, it collapses at the end of that same turn —
+// the cards spread back onto the table as loose cards, fair game for anyone
+// (including the former owner) to use.
+function buildCanExtend(playerIdx, buildIdx){
+  const hand = state.players[playerIdx].hand;
+  return hand.some(card=>{
+    const opts = findBuildOptions(card, state.table, hand);
+    return opts.some(o=>o.idxs.includes(buildIdx));
+  });
+}
+function buildCanCapture(playerIdx, buildIdx){
+  const hand = state.players[playerIdx].hand;
+  return hand.some(card=>selectionIsValidCapture(card, [buildIdx], []));
+}
+// Lets a build's owner loudly (re-)declare it at any time, on either player's
+// turn, to make sure everyone at the table has noticed it and knows it's
+// coming for capture. Purely a heads-up — it doesn't use up a turn or change
+// any game state besides the log/voice line.
+function announceBuild(tableIdx){
+  const item = state.table[tableIdx];
+  if(!item || item.type!=='build' || item.owner!==0) return;
+  const label = item.targetRank ? `${item.targetRank}s` : `${item.targetValue}`;
+  state.log = `📢 You announce: "Building ${label}!" — I'm capturing this build.`;
+  speak(`Announcing build of ${label}`);
+  render();
+}
+function destroyBuild(buildItem, reason){
+  const idx = state.table.indexOf(buildItem);
+  if(idx===-1) return;
+  const label = buildItem.targetRank ? `${buildItem.targetRank}s` : `${buildItem.targetValue}`;
+  state.table.splice(idx, 1, ...buildItem.cards.map(c=>({type:'card', card:c})));
+  state.log = `The build of ${label} breaks apart — ${reason}`;
+  speak(`Build of ${label} broken apart`);
+}
+function evaluateForcedCapture(playerIdx){
+  state.forcedCapture = null;
+  const ownBuilds = state.table.filter(it=>it.type==='build' && it.owner===playerIdx);
+  for(const item of ownBuilds){
+    const idx = state.table.indexOf(item);
+    if(idx===-1) continue;
+    if(buildCanExtend(playerIdx, idx)) continue;
+    if(buildCanCapture(playerIdx, idx)){
+      state.forcedCapture = {owner:playerIdx, buildRef:item};
+      if(playerIdx===0){
+        const label = item.targetRank ? `${item.targetRank}s` : `${item.targetValue}`;
+        speak(`Capture your build of ${label} now, or it breaks apart`);
+      }
+      return; // track the single most pressing build at a time
+    } else {
+      destroyBuild(item, `${state.players[playerIdx].name} has no way to extend or capture it.`);
+    }
+  }
+}
+
+function endTurn(){
+  const actingPlayer = state.turn;
+  if(state.forcedCapture && state.forcedCapture.owner===actingPlayer){
+    const item = state.forcedCapture.buildRef;
+    if(state.table.includes(item) && item.owner===actingPlayer){
+      destroyBuild(item, `${state.players[actingPlayer].name} didn't capture it in time.`);
+    }
+    state.forcedCapture = null;
+  }
+
+  state.selHand=null; state.selTable=new Set(); state.selCaptured=new Set();
+  dealMoreIfNeeded();
+  if(state.phase==='gameover') { render(); return; }
+  state.turn = nextActiveSeat(state.turn);
+  evaluateForcedCapture(state.turn);
+  render();
+  if(state.turn===1 && !net.active && !state.tournament) setTimeout(aiTakeTurn, settings.aiThinkMs); // online/tournament: a person moves, not the AI
+}
+// Cycles to the next seat still in play — with active always [0,1] outside
+// Tournament mode, this is exactly the old "1 - turn" toggle.
+function nextActiveSeat(from){
+  const seats = state.active || [0,1];
+  const pos = seats.indexOf(from);
+  return seats[(pos+1) % seats.length];
+}
+
+/* ============ PLAYER ACTIONS (UI) ============ */
+function playerClickHand(idx){
+  if(window.__sptHaptic) window.__sptHaptic('Light');
+  if(state.turn!==0 || state.phase!=='playing') return;
+  state.selHand = (state.selHand===idx) ? null : idx;
+  state.selTable = new Set();
+  state.selCaptured = new Set();
+  render();
+}
+function playerClickTable(idx){
+  if(window.__sptHaptic) window.__sptHaptic('Light');
+  if(state.turn!==0 || state.phase!=='playing' || state.selHand===null) return;
+  if(state.selTable.has(idx)) state.selTable.delete(idx); else state.selTable.add(idx);
+  render();
+}
+function playerClickCaptured(ownerIdx, idx){
+  if(state.turn!==0 || state.phase!=='playing' || state.selHand===null) return;
+  if(ownerIdx===0) return; // you can only raid the OPPONENT's captured pile, never your own
+  const key = `${ownerIdx}_${idx}`;
+  if(state.selCaptured.has(key)){
+    // Only the deepest picked card can be un-picked, so the run stays unbroken.
+    if(idx===deepestRaidIdx(ownerIdx)) state.selCaptured.delete(key);
+  } else if(idx===nextRaidIdx(ownerIdx)){
+    // The top card, or the card directly beneath the ones already picked.
+    state.selCaptured.add(key);
+  } else return;
+  render();
+}
+function playerCapture(){
+  if(window.__sptHaptic) window.__sptHaptic('Medium');
+  const hand = state.players[0].hand;
+  const card = hand[state.selHand];
+  const selT = [...state.selTable];
+  const selC = [...state.selCaptured];
+  if(!card || !selectionIsValidCapture(card, selT, selC)) return;
+  if(net.active && net.role==='guest'){ netSendAction('capture'); return; }
+  if(state.tournament && tnet.role==='guest'){ tSendAction('capture'); return; }
+  performCapture(0, card, selT, selC);
+  endTurn();
+}
+function playerBuild(){
+  if(window.__sptHaptic) window.__sptHaptic('Light');
+  const hand = state.players[0].hand;
+  const card = hand[state.selHand];
+  const selT = [...state.selTable];
+  const selC = [...state.selCaptured];
+  if(!card || !selectionIsValidBuild(card, selT, selC, hand)) return;
+  if(net.active && net.role==='guest'){ netSendAction('build'); return; }
+  if(state.tournament && tnet.role==='guest'){ tSendAction('build'); return; }
+  performBuild(0, card, selT, selC);
+  endTurn();
+}
+function playerTrail(){
+  if(window.__sptHaptic) window.__sptHaptic('Light');
+  const hand = state.players[0].hand;
+  const card = hand[state.selHand];
+  if(!card || state.selTable.size>0 || state.selCaptured.size>0) return;
+  if(settings.confirmTrail && typeof window!=='undefined' && window.confirm){
+    if(!window.confirm(`Trail ${card.rank}${card.suit} face-up without capturing?`)) return;
+  }
+  if(net.active && net.role==='guest'){ netSendAction('trail'); return; }
+  if(state.tournament && tnet.role==='guest'){ tSendAction('trail'); return; }
+  performTrail(0, card);
+  endTurn();
+}
+
+/* ============ AI ============ */
+// Old table-only search (rank match, single build match, single-group sum) — still
+// used as a fast baseline, and as the sole path for face/ace capture matching.
+function findCaptureOptions(card, table){
+  const options=[];
+  if(FACE_OR_ACE.has(card.rank)){
+    // Any number of matching same-rank builds can be swept together (each is
+    // already one complete unit), but a loose matching card can only be taken
+    // one at a time — never several scattered loose cards in one sweep.
+    const buildIdxs=[], looseIdxs=[];
+    table.forEach((item,idx)=>{
+      if(item.type==='build' && item.targetRank===card.rank) buildIdxs.push(idx);
+      else if(item.type==='card' && item.card.rank===card.rank) looseIdxs.push(idx);
+    });
+    if(buildIdxs.length>0 || looseIdxs.length>0){
+      options.push([...buildIdxs, ...looseIdxs.slice(0,1)]);
+    }
+    return options;
+  }
+  const value = buildValue(card);
+  const matchingBuildIdxs = [];
+  table.forEach((item,idx)=>{
+    if(item.type==='build' && item.targetValue===value) matchingBuildIdxs.push(idx);
+  });
+  const looseIdx=[];
+  table.forEach((item,idx)=>{ if(item.type==='card' && buildValue(item.card)!==null) looseIdx.push(idx); });
+  const looseItems = looseIdx.map(idx=>({idx, val:buildValue(table[idx].card)}));
+  const subsets = getAllSubsets(looseItems);
+  const looseGroupings = [[]]; // start with "no loose cards", i.e. a pure build sweep
+  subsets.forEach(subset=>{
+    const sum = subset.reduce((s,i)=>s+i.val,0);
+    if(sum===value) looseGroupings.push(subset.map(i=>i.idx));
+  });
+  // Any matching build(s) get swept alongside whichever loose grouping (including none).
+  looseGroupings.forEach(looseIdxs=>{
+    const combined = [...matchingBuildIdxs, ...looseIdxs];
+    if(combined.length>0) options.push(combined);
+  });
+  return options;
+}
+function findBuildOptions(card, table, hand){
+  const remaining = hand.filter(c=>c!==card);
+  const results = [];
+
+  // Rank-stacking option — face cards and Aces only.
+  if(FACE_OR_ACE.has(card.rank) && remaining.some(c=>c.rank===card.rank)){
+    const idxs=[];
+    table.forEach((item,idx)=>{
+      if(item.type==='card' && item.card.rank===card.rank) idxs.push(idx);
+      else if(item.type==='build' && item.targetRank===card.rank) idxs.push(idx);
+    });
+    if(idxs.length>0) results.push({idxs});
+  }
+
+  // Numeric option — 2-10 cards, and an Ace contributing as a 1. A build's own
+  // number can never change: any subset touching an existing build must lock
+  // T to that build's value (and can't mix builds with different values).
+  const value = sumValue(card);
+  if(value!==null){
+    const combIdx=[];
+    table.forEach((item,idx)=>{
+      if(item.type==='card' && sumValue(item.card)!==null) combIdx.push({idx, val:sumValue(item.card), isBuild:false});
+      else if(item.type==='build' && item.targetValue!==null) combIdx.push({idx, val:item.targetValue, isBuild:true});
+    });
+    const subsets = getAllSubsets(combIdx);
+    subsets.forEach(subset=>{
+      const buildsInSubset = subset.filter(i=>i.isBuild);
+      const looseInSubset = subset.filter(i=>!i.isBuild);
+      if(buildsInSubset.length>0){
+        const T = buildsInSubset[0].val;
+        if(buildsInSubset.some(b=>b.val!==T)) return; // can't merge builds with different numbers
+        const looseValues = [value, ...looseInSubset.map(i=>i.val)];
+        if(canPartitionExact(looseValues, T) && remaining.some(c=>buildValue(c)===T)){
+          results.push({idxs:subset.map(i=>i.idx)});
+        }
+        return;
+      }
+      const values = [value, ...subset.map(i=>i.val)];
+      for(let T=2; T<=10; T++){
+        if(canPartitionExact(values, T) && remaining.some(c=>buildValue(c)===T)){
+          results.push({idxs:subset.map(i=>i.idx)});
+          break;
+        }
+      }
+    });
+  }
+  return results;
+}
+
+// A deck only ever has 4 cards of any given rank, so a value-based search (rather
+// than enumerating every subset of a potentially large captured pile) stays fast
+// no matter how big the piles get. Finds the group (subset of denominations) that
+// sums exactly to `target` while using the MOST cards, respecting supply limits.
+function bestGroupByCount(denomCounts, target){
+  const denoms = Object.keys(denomCounts).map(Number).filter(d=>d>0 && d<=target);
+  let best = null;
+  function rec(i, remaining, combo, count){
+    if(remaining===0){
+      if(!best || count>best.count) best = {count, combo:[...combo]};
+      return;
+    }
+    if(i>=denoms.length) return;
+    const d = denoms[i];
+    const maxUse = Math.min(denomCounts[d]||0, Math.floor(remaining/d));
+    for(let use=maxUse; use>=0; use--){
+      for(let k=0;k<use;k++) combo.push(d);
+      rec(i+1, remaining-use*d, combo, count+use);
+      for(let k=0;k<use;k++) combo.pop();
+    }
+  }
+  rec(0, target, [], 0);
+  return best;
+}
+// Only ONE card may ever be raided from a captured pile per move — table cards
+// have no such limit. To enforce that cleanly, the pool searches below try the
+// table-only case, then each individual raidable card added one at a time, and
+// keep whichever choice (or none) captures/builds the most.
+function tablePoolRefs(){
+  const refs = [];
+  state.table.forEach((it, idx)=>{
+    if(it.type==='card'){
+      const v = sumValue(it.card);
+      if(v!==null) refs.push({value:v, kind:'tableCard', idx});
+    }
+  });
+  return refs;
+}
+function raidCandidateRefs(raidOwners){
+  // Only the top card of each pile (the most recently captured one) is ever
+  // raidable — nothing buried underneath it.
+  const cands = [];
+  (raidOwners||[]).forEach(owner=>{
+    const pile = state.players[owner].captured;
+    if(pile.length===0) return;
+    const idx = pile.length-1;
+    const v = sumValue(pile[idx]);
+    if(v!==null) cands.push({value:v, kind:'captured', owner, idx});
+  });
+  return cands;
+}
+function poolCaptureKeys(refs){
+  return {
+    tableIdxs: refs.filter(r=>r.kind==='tableCard').map(r=>r.idx),
+    capturedKeys: refs.filter(r=>r.kind==='captured').map(r=>`${r.owner}_${r.idx}`)
+  };
+}
+// Repeatedly pulls the biggest available group for `target` out of a fixed pool,
+// stacking as many complete groups together as possible — mirrors the "5+2,
+// 4+3" multi-group capture.
+function multiGroupExtract(refs, target){
+  const byValue = {};
+  refs.forEach(r=>{ (byValue[r.value]=byValue[r.value]||[]).push(r); });
+  const used = [];
+  let groups = 0;
+  while(true){
+    const denomCounts = {};
+    Object.keys(byValue).forEach(v=>{ if(byValue[v].length>0) denomCounts[v]=byValue[v].length; });
+    const best = bestGroupByCount(denomCounts, target);
+    if(!best || best.count===0) break;
+    best.combo.forEach(v=>{ used.push(byValue[v].pop()); });
+    groups++;
+  }
+  return used;
+}
+function findPoolCapture(target, raidOwners){
+  const tableRefs = tablePoolRefs();
+  let bestUsed = multiGroupExtract(tableRefs, target);
+  raidCandidateRefs(raidOwners).forEach(cand=>{
+    const used = multiGroupExtract([...tableRefs, cand], target);
+    if(used.length>bestUsed.length) bestUsed = used;
+  });
+  if(bestUsed.length===0) return null;
+  const {tableIdxs, capturedKeys} = poolCaptureKeys(bestUsed);
+  return {tableIdxs, capturedKeys, cardCount: bestUsed.length};
+}
+function findPoolBuild(handCard, hand, raidOwners){
+  const value = sumValue(handCard);
+  if(value===null) return null;
+  const remaining = hand.filter(c=>c!==handCard);
+  const tableRefs = tablePoolRefs();
+  const raidCands = raidCandidateRefs(raidOwners);
+  let bestOption = null;
+
+  function bestAddendGroup(pool, target){
+    const denomCounts = {};
+    pool.forEach(r=>{ denomCounts[r.value]=(denomCounts[r.value]||0)+1; });
+    const best = bestGroupByCount(denomCounts, target);
+    if(!best || best.count===0) return null;
+    const byValue = {};
+    pool.forEach(r=>{ (byValue[r.value]=byValue[r.value]||[]).push(r); });
+    return best.combo.map(v=>byValue[v].pop());
+  }
+
+  // Case A: hand card + an arithmetic addend group raises the sum above its own
+  // value — table cards freely, plus at most one raided card.
+  for(let sum=value+1; sum<=10; sum++){
+    if(!remaining.some(c=>buildValue(c)===sum)) continue;
+    const target = sum - value;
+    let used = bestAddendGroup(tableRefs, target);
+    raidCands.forEach(cand=>{
+      const withRaid = bestAddendGroup([...tableRefs, cand], target);
+      if(withRaid && (!used || withRaid.length>used.length)) used = withRaid;
+    });
+    if(used && (!bestOption || sum>bestOption.sum)){
+      const {tableIdxs, capturedKeys} = poolCaptureKeys(used);
+      bestOption = {sum, tableIdxs, capturedKeys};
+    }
+  }
+
+  // Case B: stack cards that already equal the hand card's own value (e.g. two
+  // loose 7s) into the same build — findPoolCapture already caps raiding at one.
+  if(remaining.some(c=>buildValue(c)===value)){
+    const pool = findPoolCapture(value, raidOwners);
+    if(pool && pool.cardCount>0 && (!bestOption || value>=bestOption.sum)){
+      bestOption = {sum:value, tableIdxs:pool.tableIdxs, capturedKeys:pool.capturedKeys};
+    }
+  }
+
+  return bestOption;
+}
+
+// Rank-based pool gathering: any number of matching same-rank builds (each is
+// already one complete unit), plus loose matching cards — capped to at most one
+// loose card total (table or raided) when gathering for a CAPTURE, since several
+// scattered loose cards can't be swept together without being built first.
+// Builds allow unlimited loose stacking (capLoose=false), captures don't.
+function findRankPoolCapture(rank, raidOwners, capLoose){
+  const buildIdxs = [];
+  const looseTableIdxs = [];
+  state.table.forEach((it, idx)=>{
+    if(it.type==='build' && it.targetRank===rank) buildIdxs.push(idx);
+    else if(it.type==='card' && it.card.rank===rank) looseTableIdxs.push(idx);
+  });
+  let capturedKeys = [];
+  for(const owner of (raidOwners||[])){
+    const pile = state.players[owner].captured;
+    if(pile.length===0) continue;
+    const idx = pile.length-1;
+    if(pile[idx].rank===rank){ capturedKeys = [`${owner}_${idx}`]; break; }
+  }
+  let looseTable = looseTableIdxs;
+  if(capLoose){
+    looseTable = capturedKeys.length>0 ? [] : looseTableIdxs.slice(0,1);
+  }
+  const tableIdxs = [...buildIdxs, ...looseTable];
+  if(tableIdxs.length===0 && capturedKeys.length===0) return null;
+  let cardCount = capturedKeys.length;
+  tableIdxs.forEach(idx=>{
+    const it = state.table[idx];
+    cardCount += it.type==='build' ? it.cards.length : 1;
+  });
+  return {tableIdxs, capturedKeys, cardCount};
+}
+function findRankPoolBuild(card, hand, raidOwners){
+  if(!FACE_OR_ACE.has(card.rank)) return null;
+  const remaining = hand.filter(c=>c!==card);
+  if(!remaining.some(c=>c.rank===card.rank)) return null;
+  return findRankPoolCapture(card.rank, raidOwners, false); // building allows unlimited loose stacking
+}
+
+function anyCaptureAvailable(playerIdx){
+  // Captures are never sourced from a raided captured-pile card (see
+  // selectionIsValidCapture) — only table cards/builds count here.
+  const hand = state.players[playerIdx].hand;
+  if(hand.some(card=>findCaptureOptions(card, state.table).length>0)) return true;
+  return hand.some(card=>{
+    if(FACE_OR_ACE.has(card.rank)) return !!findRankPoolCapture(card.rank, [], true);
+    const value = buildValue(card);
+    if(value===null) return false;
+    return !!findPoolCapture(value, []);
+  });
+}
+
+function cardScoreWeight(card){
+  let w=0;
+  if(card.suit==='♠') w+=1;
+  if(card.rank==='A') w+=1;
+  if(card.rank==='2' && card.suit==='♠') w+=1;
+  if(card.rank==='10' && card.suit==='♦') w+=2;
+  return w;
+}
+
+function effectiveAiDifficulty(){
+  return (ui.match && ui.match.comeback && ui.match.comebackDifficulty) ? ui.match.comebackDifficulty : settings.aiDifficulty;
+}
+function aiTakeTurn(){
+  const d = effectiveAiDifficulty();
+  if(d==='easy') return aiTakeTurnEasy();
+  if(d==='hard') return aiTakeTurnHard();
+  return aiTakeTurnMedium();
+}
+
+function aiTakeTurnMedium(){
+  if(state.phase!=='playing') return;
+  const hand = state.players[1].hand;
+  if(hand.length===0){ endTurn(); return; }
+
+  // If the rival is obligated to capture its own build this turn, do that first —
+  // it takes priority over any other greedy option.
+  if(state.forcedCapture && state.forcedCapture.owner===1){
+    const idx = state.table.indexOf(state.forcedCapture.buildRef);
+    if(idx!==-1){
+      const card = hand.find(c=>selectionIsValidCapture(c, [idx], []));
+      if(card){ performCapture(1, card, [idx], []); endTurn(); return; }
+    }
+  }
+
+  // 1) Best capture: compare the table-only search against the pooled multi-group
+  // (or rank-group) search, which can also raid the human's captured pile — take
+  // whichever nets more cards.
+  let best=null;
+  hand.forEach(card=>{
+    const opts = findCaptureOptions(card, state.table);
+    opts.forEach(idxs=>{
+      const size = idxs.reduce((n,i)=> n + (state.table[i].type==='build'? state.table[i].cards.length : 1),0);
+      if(!best || size>best.size) best={card, tableIdxs:idxs, capturedKeys:[], size};
+    });
+    if(FACE_OR_ACE.has(card.rank)){
+      // Captures never raid a captured pile — only table cards/builds.
+      const rankPool = findRankPoolCapture(card.rank, [], true);
+      if(rankPool && (!best || rankPool.cardCount>best.size)){
+        best = {card, tableIdxs:rankPool.tableIdxs, capturedKeys:rankPool.capturedKeys, size:rankPool.cardCount};
+      }
+    } else {
+      const value = buildValue(card);
+      if(value!==null){
+        const pool = findPoolCapture(value, []);
+        if(pool && (!best || pool.cardCount>best.size)){
+          best = {card, tableIdxs:pool.tableIdxs, capturedKeys:pool.capturedKeys, size:pool.cardCount};
+        }
+      }
+    }
+  });
+  if(best){ performCapture(1, best.card, best.tableIdxs, best.capturedKeys); endTurn(); return; }
+
+  // 2) Best build: same comparison between table-only builds/extensions and
+  // builds assembled by raiding the human's captured pile, ranked by how many
+  // cards end up gathered into the stack.
+  let bestBuild=null;
+  hand.forEach(card=>{
+    const opts = findBuildOptions(card, state.table, hand);
+    opts.forEach(o=>{
+      if(!bestBuild || o.idxs.length>bestBuild.itemCount) bestBuild={card, tableIdxs:o.idxs, capturedKeys:[], itemCount:o.idxs.length};
+    });
+    const pools = [findPoolBuild(card, hand, [0])];
+    if(FACE_OR_ACE.has(card.rank)) pools.push(findRankPoolBuild(card, hand, [0]));
+    pools.forEach(pool=>{
+      if(pool){
+        const itemCount = pool.tableIdxs.length + pool.capturedKeys.length;
+        if(!bestBuild || itemCount>bestBuild.itemCount) bestBuild = {card, tableIdxs:pool.tableIdxs, capturedKeys:pool.capturedKeys, itemCount};
+      }
+    });
+  });
+  if(bestBuild){ performBuild(1, bestBuild.card, bestBuild.tableIdxs, bestBuild.capturedKeys); endTurn(); return; }
+
+  let trailCard = hand.find(c=>!FACE_OR_ACE.has(c.rank) && buildValue(c)<=4) || hand[0];
+  performTrail(1, trailCard);
+  endTurn();
+}
+
+// Easy: table-only options (no raiding, no rank pooling), and a real chance to
+// skip an available play so it's genuinely beatable. Trails at random.
+function aiTakeTurnEasy(){
+  if(state.phase!=='playing') return;
+  const hand = state.players[1].hand;
+  if(hand.length===0){ endTurn(); return; }
+
+  if(state.forcedCapture && state.forcedCapture.owner===1){
+    const idx = state.table.indexOf(state.forcedCapture.buildRef);
+    if(idx!==-1){
+      const card = hand.find(c=>selectionIsValidCapture(c, [idx], []));
+      if(card){ performCapture(1, card, [idx], []); endTurn(); return; }
+    }
+  }
+
+  let best=null;
+  hand.forEach(card=>{
+    findCaptureOptions(card, state.table).forEach(idxs=>{
+      const size = idxs.reduce((n,i)=> n + (state.table[i].type==='build'? state.table[i].cards.length : 1),0);
+      if(!best || size>best.size) best={card, tableIdxs:idxs, capturedKeys:[], size};
+    });
+  });
+  if(best && Math.random()<0.65){ performCapture(1, best.card, best.tableIdxs, best.capturedKeys); endTurn(); return; }
+
+  let bestBuild=null;
+  hand.forEach(card=>{
+    findBuildOptions(card, state.table, hand).forEach(o=>{
+      if(!bestBuild || o.idxs.length>bestBuild.itemCount) bestBuild={card, tableIdxs:o.idxs, capturedKeys:[], itemCount:o.idxs.length};
+    });
+  });
+  if(bestBuild && Math.random()<0.5){ performBuild(1, bestBuild.card, bestBuild.tableIdxs, bestBuild.capturedKeys); endTurn(); return; }
+
+  const trailCard = hand[Math.floor(Math.random()*hand.length)];
+  performTrail(1, trailCard);
+  endTurn();
+}
+
+// Hard: same search scope as Medium, but breaks ties between equally-sized
+// options by preferring the one worth more toward scoring (spades, aces,
+// 2♠, 10♦), and trails the least valuable card when nothing else is available.
+function aiTakeTurnHard(){
+  if(state.phase!=='playing') return;
+  const hand = state.players[1].hand;
+  if(hand.length===0){ endTurn(); return; }
+
+  if(state.forcedCapture && state.forcedCapture.owner===1){
+    const idx = state.table.indexOf(state.forcedCapture.buildRef);
+    if(idx!==-1){
+      const card = hand.find(c=>selectionIsValidCapture(c, [idx], []));
+      if(card){ performCapture(1, card, [idx], []); endTurn(); return; }
+    }
+  }
+
+  function weightOf(tableIdxs, capturedKeys, extraCard){
+    let w = extraCard ? cardScoreWeight(extraCard) : 0;
+    tableIdxs.forEach(i=>{
+      const it = state.table[i];
+      const cards = it.type==='build' ? it.cards : [it.card];
+      cards.forEach(c=>w+=cardScoreWeight(c));
+    });
+    capturedKeys.forEach(k=>{
+      const [owner,idx] = k.split('_').map(Number);
+      w += cardScoreWeight(state.players[owner].captured[idx]);
+    });
+    return w;
+  }
+
+  let best=null;
+  function considerCapture(card, tableIdxs, capturedKeys){
+    const size = tableIdxs.reduce((n,i)=> n + (state.table[i].type==='build'? state.table[i].cards.length : 1),0) + capturedKeys.length;
+    const weight = weightOf(tableIdxs, capturedKeys, card);
+    if(!best || size>best.size || (size===best.size && weight>best.weight)){
+      best = {card, tableIdxs, capturedKeys, size, weight};
+    }
+  }
+  hand.forEach(card=>{
+    findCaptureOptions(card, state.table).forEach(idxs=>considerCapture(card, idxs, []));
+    // Captures never raid a captured pile — only table cards/builds.
+    if(FACE_OR_ACE.has(card.rank)){
+      const rankPool = findRankPoolCapture(card.rank, [], true);
+      if(rankPool) considerCapture(card, rankPool.tableIdxs, rankPool.capturedKeys);
+    } else {
+      const value = buildValue(card);
+      if(value!==null){
+        const pool = findPoolCapture(value, []);
+        if(pool) considerCapture(card, pool.tableIdxs, pool.capturedKeys);
+      }
+    }
+  });
+  if(best){ performCapture(1, best.card, best.tableIdxs, best.capturedKeys); endTurn(); return; }
+
+  let bestBuild=null;
+  hand.forEach(card=>{
+    findBuildOptions(card, state.table, hand).forEach(o=>{
+      if(!bestBuild || o.idxs.length>bestBuild.itemCount) bestBuild={card, tableIdxs:o.idxs, capturedKeys:[], itemCount:o.idxs.length};
+    });
+    const pools = [findPoolBuild(card, hand, [0])];
+    if(FACE_OR_ACE.has(card.rank)) pools.push(findRankPoolBuild(card, hand, [0]));
+    pools.forEach(pool=>{
+      if(pool){
+        const itemCount = pool.tableIdxs.length + pool.capturedKeys.length;
+        if(!bestBuild || itemCount>bestBuild.itemCount) bestBuild = {card, tableIdxs:pool.tableIdxs, capturedKeys:pool.capturedKeys, itemCount};
+      }
+    });
+  });
+  if(bestBuild){ performBuild(1, bestBuild.card, bestBuild.tableIdxs, bestBuild.capturedKeys); endTurn(); return; }
+
+  const sorted = [...hand].sort((a,b)=>cardScoreWeight(a)-cardScoreWeight(b));
+  performTrail(1, sorted[0]);
+  endTurn();
+}
+
+/* ============ SCORING ============ */
+function computeScores(){
+  const p0=state.players[0], p1=state.players[1];
+  function spadeCount(p){ return p.captured.filter(c=>c.suit==='♠').length; }
+  function aceCount(p){ return p.captured.filter(c=>c.rank==='A').length; }
+  function hasCard(p, rank, suit){ return p.captured.some(c=>c.rank===rank && c.suit===suit); }
+
+  const s0=spadeCount(p0), s1=spadeCount(p1);
+  const spadesBonus0 = s0>s1 ? 1 : 0;
+  const spadesBonus1 = s1>s0 ? 1 : 0;
+
+  const cards0=p0.captured.length, cards1=p1.captured.length;
+  const cardsBonus0 = cards0>cards1 ? 3 : 0;
+  const cardsBonus1 = cards1>cards0 ? 3 : 0;
+
+  function breakdown(p, spadesBonus, cardsBonus){
+    const aces = aceCount(p);
+    const little = hasCard(p,'2','♠') ? 1 : 0;
+    const big = hasCard(p,'10','♦') ? 2 : 0;
+    const total = aces + little + big + spadesBonus + cardsBonus;
+    return {aces, little, big, spadesBonus, cardsBonus, total, spades:p===p0?s0:s1, cards:p===p0?cards0:cards1};
+  }
+  return {
+    you: breakdown(p0, spadesBonus0, cardsBonus0),
+    rival: breakdown(p1, spadesBonus1, cardsBonus1)
+  };
+}
+
+// ---- Tournament mode: scoring/elimination across any number of active seats.
+// Fully separate from computeScores()/endGame() above, which stay exactly as
+// they were for Player vs AI and Online Rooms (both always exactly 2 seats).
+function computeAllScores(seatIdxs){
+  const seats = seatIdxs || state.active;
+  const spadeCounts = seats.map(s=>state.players[s].captured.filter(c=>c.suit==='♠').length);
+  const cardCounts = seats.map(s=>state.players[s].captured.length);
+  const maxSpades = Math.max(...spadeCounts);
+  const maxCards = Math.max(...cardCounts);
+  const spadesLeaders = spadeCounts.filter(n=>n===maxSpades).length;
+  const cardsLeaders = cardCounts.filter(n=>n===maxCards).length;
+  return seats.map((seat,i)=>{
+    const p = state.players[seat];
+    const aces = p.captured.filter(c=>c.rank==='A').length;
+    const little = p.captured.some(c=>c.rank==='2' && c.suit==='♠') ? 1 : 0;
+    const big = p.captured.some(c=>c.rank==='10' && c.suit==='♦') ? 2 : 0;
+    // A bonus only goes to a SOLE leader — same tie rule as the 2-player game.
+    const spadesBonus = (spadeCounts[i]===maxSpades && spadesLeaders===1) ? 1 : 0;
+    const cardsBonus = (cardCounts[i]===maxCards && cardsLeaders===1) ? 3 : 0;
+    const total = aces + little + big + spadesBonus + cardsBonus;
+    return {seat, name:p.name, aces, little, big, spadesBonus, cardsBonus, total, spades:spadeCounts[i], cards:cardCounts[i]};
+  });
+}
+// Picks who's eliminated this round: lowest total score; ties broken by fewest
+// spades captured, then fewest cards captured; any further tie is broken at
+// random so the tournament always keeps moving.
+function tournamentPickEliminated(scores){
+  let worst = scores[0];
+  for(const sc of scores.slice(1)){
+    if(sc.total<worst.total
+      || (sc.total===worst.total && sc.spades<worst.spades)
+      || (sc.total===worst.total && sc.spades===worst.spades && sc.cards<worst.cards)){
+      worst = sc;
+    } else if(sc.total===worst.total && sc.spades===worst.spades && sc.cards===worst.cards && Math.random()<0.5){
+      worst = sc;
+    }
+  }
+  return worst;
+}
+
+function endGame(){
+  if(state.lastCapturer!==null && state.table.length>0){
+    const remaining = state.table.reduce((arr,item)=> arr.concat(item.type==='card'?[item.card]:item.cards), []);
+    state.players[state.lastCapturer].captured = state.players[state.lastCapturer].captured.concat(remaining);
+    state.table=[];
+  }
+  state.phase='gameover';
+  const sc = computeScores();
+  if(ui.match){
+    // Tally this set toward the match — ties don't add a win to either side.
+    if(sc.you.total>sc.rival.total) ui.match.wins[0]++;
+    else if(sc.rival.total>sc.you.total) ui.match.wins[1]++;
+    ui.match.setsPlayed++;
+  }
+  let msg = sc.you.total===sc.rival.total ? 'Game over. It\'s a tie.'
+    : (sc.you.total>sc.rival.total ? 'Game over. You win!' : 'Game over. Rival wins.');
+  if(!net.active && ui.match){
+    let delta = 0;
+    if(ui.match.comeback){
+      if(sc.you.total>sc.rival.total) delta = 100;
+    } else if(ui.match.wager>0){
+      if(sc.you.total>sc.rival.total) delta = ui.match.wager;
+      else if(sc.rival.total>sc.you.total) delta = -ui.match.wager;
+    }
+    if(delta!==0) walletAdd(delta);
+    ui.match.lastWalletDelta = delta;
+    if(delta>0) msg += ` ${moneyFmt(delta)} to your wallet.`;
+    else if(delta<0) msg += ` ${moneyFmt(delta)} from your wallet.`;
+  }
+  speak(msg);
+}
+
+/* ============ RENDER ============ */
+const VT_SUIT_NAME = {'♠':'spade','♥':'heart','♦':'diamond','♣':'club'};
+function cardVTName(card){
+  return `card-${card.rank}-${VT_SUIT_NAME[card.suit]}`;
+}
+function cardHTML(card, extraClass=''){
+  const red = isRed(card) ? 'red' : '';
+  return `<div class="card ${red} ${extraClass}" style="view-transition-name:${cardVTName(card)}">
+    <div class="rank-top">${card.rank}</div>
+    <div class="suit-mid">${card.suit}</div>
+    <div class="rank-bot">${card.rank}</div>
+  </div>`;
+}
+function miniCardHTML(card){
+  const red = isRed(card) ? 'red' : '';
+  return `<div class="mini-card ${red}" style="view-transition-name:${cardVTName(card)}">${card.rank}${card.suit}</div>`;
+}
+
+function render(){
+  netMaybeSync(); // online host: send any change to the friend
+  if(state && state.tournament && typeof tnet!=='undefined' && tnet.role==='host') tBroadcastSnapshots();
+  // The View Transitions API lets the browser automatically animate elements
+  // that share a view-transition-name (set per-card via cardVTName) between the
+  // old and new DOM — giving cards a real "slide into place" feel whenever they
+  // move between hand, table, a build, or a captured pile, with no manual
+  // position-tracking needed. Falls back to an instant redraw where unsupported.
+  if(typeof document.startViewTransition === 'function'){
+    document.startViewTransition(()=>renderNow());
+  } else {
+    renderNow();
+  }
+}
+function renderNow(){
+  const app = document.getElementById('app');
+
+  if(ui.screen==='loading'){ app.innerHTML = loadingScreenHTML(); return; }
+  if(ui.screen==='menu'){ app.innerHTML = menuScreenHTML(); return; }
+  if(ui.screen==='howto'){ app.innerHTML = howToScreenHTML(); return; }
+  if(ui.screen==='rules'){ app.innerHTML = rulesScreenHTML(); return; }
+  if(ui.screen==='credits'){ app.innerHTML = creditsScreenHTML(); return; }
+  if(ui.screen==='online'){ app.innerHTML = onlineScreenHTML(); return; }
+  if(ui.screen==='tournament'){ app.innerHTML = tournamentScreenHTML(); return; }
+  if(ui.screen==='matchSetup'){ app.innerHTML = matchSetupHTML(); return; }
+  if(ui.screen==='matchSummary'){ app.innerHTML = matchSummaryHTML(); return; }
+
+  if(!state){ app.innerHTML=''; return; }
+
+  if(net.active && net.role==='guest' && (state.phase==='intro' || state.phase==='cutting')){ app.innerHTML = netWaitingOverlayHTML(); return; }
+
+  if(state.phase==='intro'){
+    app.innerHTML = `
+      <h1>NJUGA/CASINO</h1>
+      <div class="subtitle">a build-and-capture card game</div>
+      ${matchBadgeHTML()}
+      <div class="overlay">
+        <h2>Shuffling Cards...</h2>
+        <div class="shuffle-stage">
+          ${Array.from({length:8}).map((_,i)=>`<div class="cardback shuffle-card" style="animation-delay:${(i*0.07).toFixed(2)}s"></div>`).join('')}
+        </div>
+        <p>No jokers. Standard 52-card deck.</p>
+        <button class="primary" onclick="beginCut()">Continue</button>
+      </div>`;
+    return;
+  }
+  if(state.phase==='cutting'){
+    app.innerHTML = `
+      <h1>NJUGA/CASINO</h1>
+      ${matchBadgeHTML()}
+      <div class="overlay">
+        <h2>Cut The Cards</h2>
+        <p>Tap the deck once to cut it before dealing.</p>
+        <div class="deck-tap ${state.cuttingAnim?'cutting':''}" ${state.cuttingAnim?'':'onclick="doCut()"'}>
+          <div class="cut-pile bottom"></div>
+          <div class="cut-pile top"></div>
+        </div>
+      </div>`;
+    return;
+  }
+
+  if(state.phase==='gameover'){
+    const sc = computeScores();
+    const winner = sc.you.total===sc.rival.total ? "It's a tie!" :
+      (sc.you.total>sc.rival.total ? "You win! 🏆" : "Rival wins.");
+    const decided = matchIsDecided();
+    const actionBtn = net.active ? netGameOverButtons() : ui.match
+      ? (decided
+          ? `<button class="primary" onclick="finishMatch()">See Match Result</button>`
+          : `<button class="primary" onclick="nextSet()">Start Set ${ui.match.setsPlayed+1}</button>`)
+      : `<button class="primary" onclick="newGame()">Play Again</button>`;
+    app.innerHTML = `
+      <h1>NJUGA/CASINO</h1>
+      <div class="overlay" style="position:static; background:transparent; padding-top:10px;">
+        <div class="winner-line">${winner}</div>
+        ${matchBadgeHTML()}
+        ${ui.match && !net.active && (ui.match.wager>0 || ui.match.comeback) ? `<p style="font-size:12px;color:${(ui.match.lastWalletDelta||0)>=0?'var(--gold-bright)':'#ff8f8f'};">${ui.match.lastWalletDelta ? moneyFmt(ui.match.lastWalletDelta)+' this set' : (ui.match.comeback ? 'No bonus this set — win to earn +$100.00' : 'No change this set')} &nbsp;•&nbsp; Wallet: ${walletFmt()}</p>` : ''}
+        <table class="score-table">
+          <tr><th></th><th>You</th><th>Rival</th></tr>
+          <tr><td>Aces (1 ea)</td><td>${sc.you.aces}</td><td>${sc.rival.aces}</td></tr>
+          <tr><td>2♠ (1 pt)</td><td>${sc.you.little}</td><td>${sc.rival.little}</td></tr>
+          <tr><td>10♦ (2 pts)</td><td>${sc.you.big}</td><td>${sc.rival.big}</td></tr>
+          <tr><td>Most Spades (+1)</td><td>${sc.you.spadesBonus}</td><td>${sc.rival.spadesBonus}</td></tr>
+          <tr><td>Most Cards (+3)</td><td>${sc.you.cardsBonus}</td><td>${sc.rival.cardsBonus}</td></tr>
+          <tr><td><b>Total</b></td><td><b>${sc.you.total}</b></td><td><b>${sc.rival.total}</b></td></tr>
+        </table>
+        <p style="font-size:11px; color:var(--muted);">Spades captured — You: ${sc.you.spades}, Rival: ${sc.rival.spades} &nbsp;|&nbsp; Cards captured — You: ${sc.you.cards}, Rival: ${sc.rival.cards}</p>
+        ${actionBtn}
+        ${ui.match ? `<div style="margin-top:8px;"><button class="ghost" onclick="goToMenu()">Quit to Menu</button></div>` : ''}
+      </div>`;
+    return;
+  }
+
+  /* ---- playing UI ---- */
+  const you = state.players[0], rival = state.players[1];
+  const yourTurn = state.turn===0;
+  const selCard = state.selHand!==null ? you.hand[state.selHand] : null;
+  const selArr = [...state.selTable];
+  const selCapArr = [...state.selCaptured];
+  const canCapture = selCard && selectionIsValidCapture(selCard, selArr, selCapArr);
+  const canBuild = selCard && selectionIsValidBuild(selCard, selArr, selCapArr, you.hand);
+  const canTrail = selCard && selArr.length===0 && selCapArr.length===0;
+  const noCaptureAvailable = yourTurn && you.hand.length>0 && !anyCaptureAvailable(0);
+  const yourHandEmptyWaiting = yourTurn && you.hand.length===0;
+  const willAddToBuild = selArr.some(i=>state.table[i] && state.table[i].type==='build');
+  const forcedForYou = state.forcedCapture && state.forcedCapture.owner===0 ? state.forcedCapture.buildRef : null;
+
+  let selInfo = '';
+  if(selCard){
+    const val = buildValue(selCard);
+    if(selArr.length>0 || selCapArr.length>0){
+      const {items, hasBuild} = resolveSelection(selArr, selCapArr);
+      const raided = selCapArr.length>0;
+      if(FACE_OR_ACE.has(selCard.rank)){
+        const allRankMatch = items.length>0 && items.every(i=>i.rank===selCard.rank);
+        selInfo = allRankMatch
+          ? `Selected: ${items.length} card${items.length>1?'s':''} of rank ${selCard.rank}${raided?' (incl. raided cards)':''} &nbsp;•&nbsp; Your card: ${selCard.rank}${selCard.suit}`
+          : `Your card: ${selCard.rank}${selCard.suit} (match-only — pick cards of the same rank)`;
+      } else if(hasBuild && items.length===1 && items[0].value!==null){
+        selInfo = `Build value on table: ${items[0].value} &nbsp;•&nbsp; Your card: ${selCard.rank}${selCard.suit}`;
+      } else {
+        const allNumeric = items.every(i=>i.value!==null && i.value!==undefined);
+        if(allNumeric && !hasBuild){
+          const sum = items.reduce((s,i)=>s+i.value,0);
+          selInfo = `Selected: ${items.length} card${items.length>1?'s':''}, sum ${sum}${raided?' (incl. raided cards)':''} &nbsp;•&nbsp; Your card: ${selCard.rank}${selCard.suit} (${val===null?'match-only':val})`;
+        } else {
+          selInfo = `Your card: ${selCard.rank}${selCard.suit}`;
+        }
+      }
+    } else {
+      selInfo = `Holding ${selCard.rank}${selCard.suit} — pick table cards, or raid the top of your rival's pile (and the cards beneath it, one after another), to build — or trail it.`;
+    }
+  } else if(yourTurn){
+    selInfo = `Tap a card in your hand first — then pick table cards or the top of your rival's captured pile to combine with it.`;
+  }
+
+  function capturedStrip(ownerIdx, list){
+    // Only the OPPONENT's pile can ever be raided — a player can never pull a
+    // card back out of their own captured pile.
+    const canSelect = yourTurn && state.selHand!==null && ownerIdx!==0;
+    if(list.length===0) return '<div class="captured-empty-hint">none yet</div>';
+    return list.map((c,idx)=>{
+      const key = `${ownerIdx}_${idx}`;
+      // Selectable: the next card down the raid run (the top card to begin with),
+      // or the deepest already-picked card (tap again to un-pick it).
+      const selectable = canSelect && (idx===nextRaidIdx(ownerIdx) || idx===deepestRaidIdx(ownerIdx));
+      const selected = state.selCaptured.has(key);
+      const cls = `mini-card ${isRed(c)?'red':''} ${selectable?'selectable':''} ${selected?'selected':''}`;
+      const click = selectable ? `onclick="playerClickCaptured(${ownerIdx},${idx})"` : '';
+      return `<div class="${cls}" style="view-transition-name:${cardVTName(c)}" ${click}>${c.rank}${c.suit}</div>`;
+    }).join('');
+  }
+
+  app.innerHTML = `
+    <h1>NJUGA/CASINO</h1>
+    <div class="subtitle">a build-and-capture card game</div>
+    ${matchBadgeHTML()}
+    ${net.active ? `<div style="text-align:center;margin:2px 0 6px;"><span style="font-size:11px;color:var(--muted);">Online room ${net.code} &nbsp;</span><button class="ghost" style="padding:2px 10px;font-size:11px;" onclick="netLeave()">Leave</button></div>` : ''}
+
+    <div class="scorebar">
+      <div class="score-item"><div class="label">You</div><div class="val">${you.captured.length}</div></div>
+      <div class="deck-count"><div class="label">Deck</div><div class="val">${state.deck.length}</div></div>
+      <div class="score-item"><div class="label">Rival</div><div class="val">${rival.captured.length}</div></div>
+    </div>
+    ${!net.active && ui.match && (ui.match.wager>0 || ui.match.comeback) ? `<div style="text-align:center;font-size:11px;color:var(--gold-bright);margin:-4px 0 6px;">💰 ${walletFmt()}${ui.match.comeback?' — Comeback set: win = +$100.00':` — This set: win = ${moneyFmt(ui.match.wager)}, lose = ${moneyFmt(-ui.match.wager)}`}</div>` : ''}
+
+    <div class="captured-section">
+      <div class="captured-col">
+        <div class="cap-label">Your captured (${you.captured.length})</div>
+        <div class="captured-strip">${capturedStrip(0, you.captured)}</div>
+      </div>
+      <div class="captured-col">
+        <div class="cap-label">Rival captured (${rival.captured.length})</div>
+        <div class="captured-strip">${capturedStrip(1, rival.captured)}</div>
+      </div>
+    </div>
+
+    <div class="opp-row">
+      ${rival.hand.map(()=>`<div class="cardback"></div>`).join('')}
+    </div>
+
+    <div class="status">${state.log}</div>
+
+    <div class="table-area">
+      ${state.table.length===0 ? '<div class="table-empty-hint">Table is empty</div>' : ''}
+      ${state.table.map((item,idx)=>{
+        const selectable = yourTurn && state.selHand!==null;
+        const selected = state.selTable.has(idx);
+        const atRisk = forcedForYou===item;
+        const cls = `table-item ${selectable?'selectable':''} ${selected?'selected':''} ${atRisk?'at-risk':''}`;
+        if(item.type==='card'){
+          return `<div class="${cls}" onclick="playerClickTable(${idx})">${cardHTML(item.card)}</div>`;
+        } else {
+          const label = item.targetRank ? item.targetRank+'s' : item.targetValue;
+          const announceBtn = item.owner===0
+            ? `<button class="announce-btn" onclick="event.stopPropagation(); announceBuild(${idx});">📢 Announce</button>`
+            : '';
+          return `<div class="${cls}" onclick="playerClickTable(${idx})">
+            <div class="build-stack">${item.cards.map(c=>cardHTML(c)).join('')}</div>
+            <div class="build-badge">Build ${label}</div>
+            ${announceBtn}
+          </div>`;
+        }
+      }).join('')}
+    </div>
+
+    ${forcedForYou ? `<div class="selection-info" style="color:var(--brick);">⚠️ Capture your build of ${forcedForYou.targetRank ? forcedForYou.targetRank+'s' : forcedForYou.targetValue} this turn — you can no longer extend it, and if it's not captured now it breaks apart.</div>` : ''}
+
+    <div class="selection-info">${yourTurn ? selInfo : 'Rival is thinking...'}</div>
+
+    <div class="hand-row">
+      ${you.hand.map((c,idx)=>{
+        const cls = `hand-card ${yourTurn?'selectable':''} ${state.selHand===idx?'selected':''}`;
+        return `<div class="${cls}" onclick="playerClickHand(${idx})">${cardHTML(c)}</div>`;
+      }).join('')}
+    </div>
+
+    ${noCaptureAvailable ? `<div class="selection-info" style="color:var(--brick);">No capture available — build if you can, or play any card face-up.</div>` : ''}
+    ${yourHandEmptyWaiting ? `<div class="selection-info" style="color:var(--brick);">No cards left to play — waiting for the next round.</div>` : ''}
+
+    <div class="actions">
+      ${yourHandEmptyWaiting ? `<button class="primary" onclick="endTurn()">Continue</button>` : `
+        <button class="primary" ${canCapture?'':'disabled'} onclick="playerCapture()">Capture</button>
+        <button ${canBuild?'':'disabled'} onclick="playerBuild()">${willAddToBuild?'Add to Build':'Build'}</button>
+        <button class="ghost" ${canTrail?'':'disabled'} onclick="playerTrail()">Trail</button>
+      `}
+    </div>
+
+    <div class="rules-toggle" onclick="toggleRules()">${state.rulesOpen?'Hide':'How to play'}</div>
+    <div class="rules-panel ${state.rulesOpen?'open':''}">
+      <b>Capture:</b> Play a numeric card (2–10) to take a table card of the same rank, a build matching your card's value, or several separate loose cards that each add up to your card's value — you can stack more than one group together (e.g. 5+2 and 4+3, both making 7) and sweep them all up in one move. Leftover cards that don't form a full group just stay behind. Face cards and Aces are different: they only ever take ONE loose matching card at a time — you can't sweep two scattered Kings with a single King. Once same-rank cards are actually built into a pile, though, the whole build is one complete unit and can be captured in full (or several such builds together) with the matching card. The card you use to capture always lands on top of your pile — it was the last one played.<br><br>
+      <b>Raiding captured piles:</b> Only the TOP card of a captured pile — the most recently captured one — can start a raid, and it can only be pulled out by BUILDING with it, never by capturing it straight away. Play a hand card of the same value (or start/extend a build that reaches it), tap the top card of the opponent's pile to fold it into that build, then wait for a future turn — yours or theirs — to actually capture the build with the matching card. Lifting the top card reveals the next one, and you can keep raiding down the pile in the same move for as long as each revealed card fits the build — but you can never skip a card. E.g. rival's pile ends 4, 9, 9 (top): with a 9 build you can take both 9s, and then the 4 too if it adds up with a 5 from the table. Aces count as 1 when used this way.<br><br>
+      <b>Build:</b> Combine a numeric hand card with loose table cards, an existing build, and/or cards raided from a captured pile so the total is 2–10 — but only if you're still holding another card of that total's rank to capture it later. You can also stack cards that already match the target (e.g. two loose 7s) straight into the same build instead of adding them up — you'll just need a second capturing card left in hand. Face cards and Aces build the same way by rank instead of sum: two loose Kings plus a King raided from a captured pile can all be stacked together with a King from your hand, ready for your last King to sweep up later. A build's number is locked the moment it's made — nobody can ever change a build of 9 into a build of 10 or anything else. Either player can add more cards to grow it (as long as it still totals the same number) or capture it whole with the matching card, so it can pass back and forth before someone finally scoops it up, but its target never moves.<br><br>
+      <b>Trail:</b> If you can't or don't want to capture or build, simply play any card face-up onto the table — there's no requirement to draw from the deck.<br><br>
+      <b>Rounds:</b> Each player starts with 4 cards. Once both hands are empty, a fresh 4 cards are dealt to each player from the deck, repeating until the deck runs out — then remaining table cards go to whoever captured last. An uncaptured build isn't cleared by a redeal — it just sits there, capturable by anyone with the right card — so it's risky to leave one unclaimed for too long, since a fresh hand might hand your opponent exactly the card that steals it.<br><br>
+      <b>Build deadlines:</b> Aces can join a build as a 1 (e.g. 8 + Ace = 9), on top of stacking by rank like face cards do. If you own a build and, on your turn, you have no card left that could extend it further, you're on the clock: you must capture it that same turn, or it breaks apart into loose cards on the table — free for anyone, including you, to use again. The button changes to "Add to Build" whenever your selection includes an existing build, so it's clear you're growing it rather than starting a new one.<br><br>
+      <b>Scoring (7 points, 13 spades, 52 cards in play):</b> Aces = 1 pt each (4 pts total) · 2♠ = 1 pt · 10♦ = 2 pts — 7 points in all. Plus, whoever captured the most spades (out of the deck's 13) gets a bonus point, and whoever captured the most cards (out of all 52) gets a bigger bonus. Highest total wins.
+    </div>
+  `;
+}
+
+function beginCut(){ state.phase='cutting'; render(); }
+function toggleRules(){ state.rulesOpen=!state.rulesOpen; render(); }
+
+applyGraphicsSettings();
+renderSettingsUI();
+if(typeof window!=='undefined' && 'speechSynthesis' in window){
+  window.speechSynthesis.onvoiceschanged = renderSettingsUI; // voice list loads async in most browsers
+}
+startLoading();
+
+/* ---- Audio unlock: some Android WebViews require an explicit resume() tied
+   to a genuine user gesture before any audio will play, even after the
+   Settings toggle. This catches the very first tap/click anywhere in the app
+   and resumes the audio context if one exists and is still suspended. ---- */
+if(typeof document!=='undefined'){
+  /* iOS: WebAudio is muted by the hardware silent switch unless the page's audio
+     session is 'playback'. navigator.audioSession (iOS 16.4+) fixes it directly;
+     a looping silent <audio> element is the fallback for older WebKit. */
+  const SILENT_WAV='data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAIA+AAACABAAZGF0YQAAAAA=';
+  let silentEl=null;
+  const unlockAudio = ()=>{
+    try{ if(navigator.audioSession) navigator.audioSession.type='playback'; }catch(e){}
+    try{
+      if(!silentEl){ silentEl=new Audio(SILENT_WAV); silentEl.loop=true; silentEl.setAttribute('playsinline',''); }
+      silentEl.play().catch(()=>{});
+    }catch(e){}
+    ensureAudioCtx();
+    if(audioCtx && audioCtx.state!=='running') audioCtx.resume().catch(()=>{});
+    document.removeEventListener('touchend', unlockAudio);
+    document.removeEventListener('click', unlockAudio);
+  };
+  document.addEventListener('touchend', unlockAudio, {passive:true});
+  document.addEventListener('click', unlockAudio);
+  /* Returning from the background (or a phone call / Siri) leaves the context
+     'suspended' or 'interrupted' on iOS - wake it back up. */
+  document.addEventListener('visibilitychange', ()=>{
+    if(!document.hidden && audioCtx && audioCtx.state!=='running') audioCtx.resume().catch(()=>{});
+  });
+}
+
+/* ---- Capacitor native polish (Android + iOS) ---- */
+(function initNativePolish(){
+  try {
+    const cap = window.Capacitor;
+    const platform = (cap && cap.getPlatform) ? cap.getPlatform() : 'web';
+    const isIOS = platform==='ios' || /iPhone|iPad|iPod/.test(navigator.userAgent||'') ||
+                  (navigator.platform==='MacIntel' && navigator.maxTouchPoints>1);
+    if(isIOS) document.documentElement.classList.add('ios');
+    if (!cap || !cap.isNativePlatform || !cap.isNativePlatform()) return;
+    const P = cap.Plugins || {};
+    const App = P.App, Haptics = P.Haptics, StatusBar = P.StatusBar;
+    // Capacitor's ImpactStyle values are upper-case ('LIGHT'/'MEDIUM'/'HEAVY');
+    // anything else falls back to HEAVY on iOS.
+    window.__sptHaptic = function(style){
+      try {
+        if(Haptics && Haptics.impact) Haptics.impact({style: String(style || 'Light').toUpperCase()});
+      } catch(e) {}
+    };
+    // Light status-bar text over the dark felt background.
+    try { if(StatusBar && StatusBar.setStyle) StatusBar.setStyle({style:'DARK'}); } catch(e) {}
+
+    // Shared "go back one level" logic. Returns true if it handled the action.
+    function navBack(fromSwipe){
+      if(typeof settingsOpen !== 'undefined' && settingsOpen){ toggleSettings(); return true; }
+      if(typeof state !== 'undefined' && state && state.rulesOpen){ state.rulesOpen=false; render(); return true; }
+      const inTourney = (typeof tnet!=='undefined' && (tnet.ws || (typeof state!=='undefined' && state && state.tournament)));
+      if(typeof ui !== 'undefined' && ui && ['howto','rules','credits','online','matchSetup','tournament'].includes(ui.screen) && !inTourney){ goToMenu(); return true; }
+      if(fromSwipe) return false;               // never leave a live game / tournament by accident
+      if(inTourney){ tLeaveTournament(); return true; }
+      if(typeof ui !== 'undefined' && ui && ui.screen==='game'){ goToMenu(); return true; }
+      return false;
+    }
+    if(App && App.addListener){
+      App.addListener('backButton', function(){ if(!navBack(false)) App.exitApp(); });
+      App.addListener('appStateChange', function(st){
+        if(st && st.isActive && audioCtx && audioCtx.state!=='running') audioCtx.resume().catch(()=>{});
+      });
+    }
+    // iOS has no back button: swipe in from the left edge instead (menus only).
+    if(isIOS){
+      let sx=0, sy=0, tracking=false;
+      document.addEventListener('touchstart', function(e){
+        const t=e.touches[0]; tracking = e.touches.length===1 && t.clientX<24; sx=t.clientX; sy=t.clientY;
+      }, {passive:true});
+      document.addEventListener('touchend', function(e){
+        if(!tracking) return; tracking=false;
+        const t=e.changedTouches[0], dx=t.clientX-sx, dy=Math.abs(t.clientY-sy);
+        if(dx>80 && dy<60){ if(navBack(true) && window.__sptHaptic) window.__sptHaptic('Light'); }
+      }, {passive:true});
+    }
+  } catch(e) {}
+})();
+
+</script>
+</body>
+</html>

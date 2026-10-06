@@ -1,0 +1,14 @@
+{
+  "name": "NJUGA/CASINO",
+  "short_name": "NJUGA/CASINO",
+  "description": "A polished offline card game with an adaptive rival AI.",
+  "start_url": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0B3D2E",
+  "theme_color": "#0B3D2E",
+  "icons": [
+    {"src":"icons/icon-192.png","sizes":"192x192","type":"image/png","purpose":"any maskable"},
+    {"src":"icons/icon-512.png","sizes":"512x512","type":"image/png","purpose":"any maskable"}
+  ]
+}
